@@ -17,13 +17,13 @@ Instead of cherries and 7s, what if the symbols were:
 * "StackOverflow" (Low value)
 * "Syntax Error" (Bad)
 
-##Potential prompt alteration ideas
+**Potential prompt alteration ideas
 * **Spin Button/Lever:** The trigger. (Maybe we can animate a CSS lever?)
 * **Bankroll/Balance:** How many tokens the user has left.
 * **RNG (Random Number Generator):** The math behind the scenes that makes sure it's actually random.
 * **Volatility:** How often it pays out vs. how big the payouts are. (High volatility = rare big wins. Low volatility = frequent small wins).
 
-##Technical considerations (the SWE part)
+**Technical considerations (the SWE part)
 * **HTML/CSS:** Needs to be semantic and responsive. We can't just have a giant block of `<div>`s. 
 * **JavaScript:** We definitely need to split the logic (here are my ideas): 
     * One class/module for the **UI/Animation** (spinning the reels).
