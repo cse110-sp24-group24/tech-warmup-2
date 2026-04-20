@@ -6,7 +6,7 @@
 * "Warning: You are running out of compute!"
 
 **UI/UX thoughts (just some ideas to think about):**
-* It should look a bit "techy" or cyberpunk, maybe dark mode with neon green text (like an old terminal).
+* It could look a bit "techy" or cyberpunk, maybe dark mode with neon green text (like an old terminal).
 * When you lose, instead of a standard "Try Again," it should say something like: *"As an AI language model, I cannot let you win this spin."*
 * When you win, it should say: *"Prompt perfectly optimized. Payout generated."*
 
