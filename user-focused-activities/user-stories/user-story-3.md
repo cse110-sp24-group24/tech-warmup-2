@@ -1,4 +1,4 @@
-# User Stories: Persona 2
+# User Stories: Persona 3
 ## Low Stakes
 
 **User Story:** As a casual player, I want the ability to set my bet size to the absolute minimum (e.g., 1 token) so that I can stretch my gaming session out for as long as possible without running out of money.

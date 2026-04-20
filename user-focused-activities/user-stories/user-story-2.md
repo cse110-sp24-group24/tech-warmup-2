@@ -1,4 +1,4 @@
-# User Stories: Persona 1
+# User Stories: Persona 2
 ## Dynamic Bet Sizing
 
 **User Story:** As a high-risk player, I want the ability to adjust my wager amount and quickly select a "Max Bet" option so that I can pursue high-volatility payouts.
