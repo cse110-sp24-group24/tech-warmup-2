@@ -11,7 +11,7 @@
 | **Nishant** | Focused on moment-to-moment player experience (staggered stops, near-misses), advocated for a 3-reel setup, and established AI prompting guardrails. |
 | **Simar** | Expanded on the "AI Dystopia" theme with "hallucination" mechanics, defined statistical terms (RTP, Volatility), and emphasized varied UX feedback loops. |
 | **Ryan** | Examined statistical mechanics (RNG, Losses Disguised as Wins), UI layout best practices, and advocated for compartmentalization and Test-Driven Development. |
-
+| **Soohwan** |Researched slot machine app features including common slot machine technology, common theme, and user types |
 ---
 
 ## Domain Research: The Problem Space
