@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Retro Space Slots</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <canvas id="space-background" aria-hidden="true"></canvas>
+    <div class="crt-overlay" aria-hidden="true"></div>
+
+    <main class="game-shell" aria-labelledby="game-title">
+      <section class="machine" aria-label="Slot machine">
+        <div class="machine__header">
+          <div>
+            <p class="eyebrow">Pixel Orbit Casino</p>
+            <h1 id="game-title">Retro Space Slots</h1>
+          </div>
+          <div class="balance-panel" aria-live="polite">
+            <span>Tokens</span>
+            <strong id="balance">100</strong>
+          </div>
+        </div>
+
+        <div id="status" class="status status--ready" role="status" aria-live="polite">
+          Ready to spin.
+        </div>
+
+        <div class="reels" id="reels" aria-label="Five independent reels">
+          <div class="reel" data-reel="0" aria-label="Reel 1">
+            <div class="symbol symbol--top">ORB</div>
+            <div class="symbol symbol--center">7</div>
+            <div class="symbol symbol--bottom">GEM</div>
+          </div>
+          <div class="reel" data-reel="1" aria-label="Reel 2">
+            <div class="symbol symbol--top">GEM</div>
+            <div class="symbol symbol--center">BAR</div>
+            <div class="symbol symbol--bottom">STAR</div>
+          </div>
+          <div class="reel" data-reel="2" aria-label="Reel 3">
+            <div class="symbol symbol--top">STAR</div>
+            <div class="symbol symbol--center">ORB</div>
+            <div class="symbol symbol--bottom">COMET</div>
+          </div>
+          <div class="reel" data-reel="3" aria-label="Reel 4">
+            <div class="symbol symbol--top">COMET</div>
+            <div class="symbol symbol--center">GEM</div>
+            <div class="symbol symbol--bottom">BAR</div>
+          </div>
+          <div class="reel" data-reel="4" aria-label="Reel 5">
+            <div class="symbol symbol--top">BAR</div>
+            <div class="symbol symbol--center">STAR</div>
+            <div class="symbol symbol--bottom">7</div>
+          </div>
+        </div>
+
+        <div class="payline" aria-hidden="true"></div>
+
+        <form class="controls" id="controls">
+          <label for="bet">Bet</label>
+          <div class="bet-control">
+            <button class="icon-button" type="button" id="decrease-bet" aria-label="Decrease bet">-</button>
+            <input id="bet" name="bet" type="number" min="1" max="10" step="1" value="5">
+            <button class="icon-button" type="button" id="increase-bet" aria-label="Increase bet">+</button>
+          </div>
+          <button class="spin-button" id="spin-button" type="submit">
+            <span aria-hidden="true">&gt;</span>
+            Spin
+          </button>
+        </form>
+      </section>
+
+      <aside class="paytable" aria-labelledby="paytable-title">
+        <h2 id="paytable-title">Paytable</h2>
+        <p class="paytable__note">Center row only. Matches pay left to right.</p>
+        <div id="paytable-list" class="paytable__list"></div>
+      </aside>
+    </main>
+
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>
