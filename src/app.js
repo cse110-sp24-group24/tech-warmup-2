@@ -111,12 +111,20 @@ async function handleAutoSpin() {
     return;
   }
 
+  const autoSpinBet = getSanitizedBet();
   state.autoSpinning = true;
   setControlsEnabled(false);
 
   try {
-    for (let count = 0; count < AUTO_SPIN_COUNT && state.balance >= MIN_BET; count += 1) {
-      const outcome = await runSpin({ restoreControls: false });
+    let completedSpins = 0;
+    while (completedSpins < AUTO_SPIN_COUNT && state.balance >= autoSpinBet) {
+      const outcome = await runSpin({ bet: autoSpinBet, restoreControls: false });
+
+      if (!outcome) {
+        break;
+      }
+
+      completedSpins += 1;
 
       if (state.balance < MIN_BET) {
         break;
@@ -137,16 +145,15 @@ async function handleAutoSpin() {
 /**
  * Runs one spin while keeping spin() as the permanent balance authority.
  *
- * @param {{ restoreControls?: boolean }} [options] Cleanup behavior.
+ * @param {{ bet?: number, restoreControls?: boolean }} [options] Cleanup behavior.
  * @returns {Promise<ReturnType<typeof spin> | undefined>}
  */
-async function runSpin({ restoreControls = true } = {}) {
+async function runSpin({ bet = getSanitizedBet(), restoreControls = true } = {}) {
   if (state.spinning) {
     return undefined;
   }
 
   const startingBalance = state.balance;
-  const bet = getSanitizedBet();
   let outcome;
 
   state.spinning = true;
@@ -460,7 +467,7 @@ function renderChests() {
     const button = document.createElement("button");
     button.className = "chest_button";
     button.type = "button";
-    button.innerHTML = `<span aria-hidden="true">🎁</span><strong>Chest ${index + 1}</strong>`;
+    button.innerHTML = `<span aria-hidden="true">🧰</span><strong>Chest ${index + 1}</strong>`;
     button.addEventListener("click", () => redeemChest(reward));
     return button;
   });
@@ -552,12 +559,15 @@ function getSanitizedBet() {
 function updateBetBounds() {
   const maxBet = getCurrentMaxBet();
   const controlsDisabled = state.spinning || !state.controlsEnabled;
+  const typedBet = Number.parseInt(elements.bet.value, 10);
 
-  elements.bet.min = String(MIN_BET);
+  elements.bet.min = "0";
   elements.bet.max = String(maxBet);
-  elements.bet.value = String(getSanitizedBet());
-  elements.decreaseBet.disabled = controlsDisabled || Number(elements.bet.value) <= MIN_BET;
-  elements.increaseBet.disabled = controlsDisabled || Number(elements.bet.value) >= maxBet;
+  if (elements.bet.value !== "" && !Number.isNaN(typedBet) && typedBet > maxBet) {
+    elements.bet.value = String(maxBet);
+  }
+  elements.decreaseBet.disabled = controlsDisabled || getDisplayedBet() <= 0;
+  elements.increaseBet.disabled = controlsDisabled || getDisplayedBet() >= maxBet;
 }
 
 /**
@@ -623,9 +633,17 @@ function launchLightningBolt() {
   const overlay = document.createElement("div");
   overlay.className = "lightning_overlay";
   overlay.setAttribute("aria-hidden", "true");
-  overlay.innerHTML = '<div class="lightning_bolt">⚡</div>';
+  overlay.innerHTML = '<div class="lightning_bolt">⚡</div><div class="lightning_text">BOOST ACTIVATED</div>';
   document.body.append(overlay);
   window.setTimeout(() => overlay.remove(), 1200);
+}
+
+/**
+ * @returns {number}
+ */
+function getDisplayedBet() {
+  const parsedBet = Number.parseInt(elements.bet.value, 10);
+  return Number.isNaN(parsedBet) ? 0 : parsedBet;
 }
 
 /**
