@@ -358,6 +358,21 @@ input {
   text-align: center;
 }
 
+/* Hide native number spinners (Chrome, Safari, Edge); keep +/- buttons in UI */
+input[type="number"],
+#bet {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button,
+#bet::-webkit-outer-spin-button,
+#bet::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .spin_button,
 .auto_spin_button {
   display: inline-flex;
@@ -404,6 +419,25 @@ input {
   box-shadow: inset 0 0 18px rgba(47, 248, 255, 0.24);
 }
 
+.paytable_tab:has(#paytable_panel:not([hidden])) .paytable_tab_button {
+  color: var(--ink);
+  background: linear-gradient(
+    120deg,
+    rgba(47, 248, 255, 0.22) 0%,
+    rgba(255, 61, 242, 0.18) 45%,
+    rgba(155, 92, 255, 0.2) 100%
+  );
+  box-shadow:
+    inset 0 0 20px rgba(47, 248, 255, 0.2),
+    0 0 20px rgba(255, 61, 242, 0.15);
+}
+
+.paytable_tab:has(#paytable_panel:not([hidden])) .paytable_tab_icon {
+  border-color: rgba(255, 209, 102, 0.75);
+  color: var(--amber);
+  box-shadow: 0 0 12px rgba(255, 209, 102, 0.35);
+}
+
 .paytable_tab_button span:first-child {
   font-size: 1.1rem;
   font-weight: 700;
@@ -421,8 +455,17 @@ input {
 }
 
 .paytable_tab_panel {
-  padding: 18px;
-  border-top: 1px solid rgba(116, 232, 255, 0.24);
+  padding: 20px 20px 22px;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  background:
+    linear-gradient(165deg, rgba(47, 248, 255, 0.1) 0%, transparent 42%),
+    linear-gradient(335deg, rgba(255, 61, 242, 0.08) 0%, transparent 38%),
+    linear-gradient(180deg, rgba(5, 8, 22, 0.95), rgba(12, 8, 28, 0.92));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 209, 102, 0.22),
+    inset 0 0 40px rgba(47, 248, 255, 0.06),
+    0 12px 28px rgba(0, 0, 0, 0.35);
 }
 
 .paytable_tab_panel[hidden] {
@@ -432,8 +475,8 @@ input {
 .paytable_rules,
 .shop_rules {
   display: grid;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 18px;
   color: var(--muted);
 }
 
@@ -442,10 +485,33 @@ input {
   margin: 0;
 }
 
+.paytable_rules p {
+  padding: 10px 12px 10px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(47, 248, 255, 0.28);
+  border-left: 4px solid var(--cyan);
+  background: rgba(8, 12, 34, 0.72);
+  box-shadow: 0 0 14px rgba(47, 248, 255, 0.08);
+}
+
+.paytable_rules p:nth-child(2) {
+  border-left-color: var(--magenta);
+  border-color: rgba(255, 61, 242, 0.28);
+  box-shadow: 0 0 14px rgba(255, 61, 242, 0.08);
+}
+
 .paytable_tab h2 {
-  margin-top: 18px;
+  margin-top: 6px;
+  margin-bottom: 4px;
+  padding: 8px 12px;
   font-size: 1rem;
   color: var(--ink);
+  text-align: center;
+  letter-spacing: 0.06em;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(155, 92, 255, 0.35), rgba(47, 248, 255, 0.22), rgba(255, 61, 242, 0.28));
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  box-shadow: 0 0 18px rgba(255, 209, 102, 0.12);
 }
 
 .paytable_list,
@@ -475,6 +541,14 @@ input {
   background: rgba(8, 12, 34, 0.86);
 }
 
+.paytable_row:nth-child(odd) {
+  border-color: rgba(47, 248, 255, 0.2);
+}
+
+.paytable_row:nth-child(even) {
+  border-color: rgba(255, 61, 242, 0.18);
+}
+
 .paytable_row span,
 .shop_item span {
   min-width: 0;
@@ -484,7 +558,6 @@ input {
   color: var(--amber);
 }
 
-.shop_buy_button,
 .chest_button,
 .reward_continue_button {
   min-height: 40px;
@@ -495,16 +568,50 @@ input {
   cursor: pointer;
 }
 
-.shop_buy_button:hover,
 .chest_button:hover,
 .reward_continue_button:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 18px rgba(255, 209, 102, 0.34);
 }
 
+.shop_buy_button {
+  min-height: 40px;
+  min-width: 5.5rem;
+  padding: 0 14px;
+  border: 1px solid rgba(47, 248, 255, 0.65);
+  border-radius: 6px;
+  color: var(--ink);
+  cursor: pointer;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  background: linear-gradient(145deg, rgba(155, 92, 255, 0.42), rgba(47, 248, 255, 0.2), rgba(255, 61, 242, 0.22));
+  box-shadow:
+    0 0 14px rgba(47, 248, 255, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, filter 0.16s ease;
+}
+
+.shop_buy_button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: rgba(255, 209, 102, 0.85);
+  box-shadow:
+    0 0 22px rgba(47, 248, 255, 0.45),
+    0 0 28px rgba(255, 61, 242, 0.28),
+    inset 0 0 16px rgba(255, 209, 102, 0.12);
+  filter: brightness(1.06);
+}
+
+.shop_buy_button:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
 .shop_buy_button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+  filter: none;
+  box-shadow: none;
 }
 
 .modal_overlay {

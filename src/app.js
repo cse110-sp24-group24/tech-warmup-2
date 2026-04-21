@@ -17,7 +17,8 @@ const CONFETTI_COLORS = Object.freeze(["#2ff8ff", "#ff3df2", "#9b5cff", "#ffd166
 const CHEST_REWARDS = Object.freeze([50, 500, 0]);
 const SHOP_ITEMS = Object.freeze([
   { id: "boost_2x", label: "2x Payout Boost", multiplier: 2, cost: 75 },
-  { id: "boost_3x", label: "3x Payout Boost", multiplier: 3, cost: 180 }
+  { id: "boost_3x", label: "3x Payout Boost", multiplier: 3, cost: 180 },
+  { id: "boost_4x", label: "4x Payout Boost", multiplier: 4, cost: 320 }
 ]);
 const SYMBOL_EMBLEMS = Object.freeze({
   "7": "7",
