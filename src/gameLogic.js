@@ -1,6 +1,5 @@
 export const REEL_COUNT = 5;
 export const ROW_COUNT = 3;
-export const CENTER_ROW_INDEX = 1;
 export const INITIAL_BALANCE = 100;
 export const MIN_BET = 1;
 export const MAX_BET = 10;
@@ -97,17 +96,7 @@ export function getPayline(reels, rowPattern) {
 }
 
 /**
- * Extracts the center horizontal payline from visible reels.
- *
- * @param {string[][]} reels Current visible reel symbols.
- * @returns {string[]}
- */
-export function getCenterPayline(reels) {
-  return getPayline(reels, [CENTER_ROW_INDEX, CENTER_ROW_INDEX, CENTER_ROW_INDEX, CENTER_ROW_INDEX, CENTER_ROW_INDEX]);
-}
-
-/**
- * Evaluates left-to-right matches on one payline using the paytable.
+ * Evaluates matching symbols within one adjacent-row path.
  *
  * @param {string[]} payline Payline symbols.
  * @param {Map<string, { multiplier: number, label: string }>} paytable Paytable lookup.
@@ -244,6 +233,12 @@ function validateReels(reels) {
     if (!Array.isArray(reel) || reel.length !== ROW_COUNT) {
       throw new RangeError("Each reel must contain exactly three visible rows.");
     }
+
+    reel.forEach((symbol) => {
+      if (!SYMBOLS.includes(symbol)) {
+        throw new RangeError(`Unknown reel symbol: ${symbol}`);
+      }
+    });
   });
 }
 

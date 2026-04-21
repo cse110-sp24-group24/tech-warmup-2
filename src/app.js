@@ -1,7 +1,6 @@
 import {
   BIG_WIN_MULTIPLIER,
   INITIAL_BALANCE,
-  LEGAL_PATHS,
   MAX_BET,
   MIN_BET,
   PAYTABLE,
@@ -12,7 +11,13 @@ import { RetroSpaceBackground } from "./spaceBackground.js";
 const SPIN_DURATION_MS = 950;
 const REEL_STOP_STAGGER_MS = 130;
 const AUTO_SPIN_COUNT = 5;
+const BOOST_SPIN_COUNT = 5;
 const CONFETTI_COLORS = Object.freeze(["#2ff8ff", "#ff3df2", "#9b5cff", "#ffd166", "#54ffad"]);
+const CHEST_REWARDS = Object.freeze([50, 500, 0]);
+const SHOP_ITEMS = Object.freeze([
+  { id: "boost_2x", label: "2x Payout Boost", multiplier: 2, cost: 75 },
+  { id: "boost_3x", label: "3x Payout Boost", multiplier: 3, cost: 180 }
+]);
 const SYMBOL_EMBLEMS = Object.freeze({
   "7": "7",
   BAR: "▰",
@@ -35,14 +40,19 @@ const elements = {
   autoSpinButton: document.querySelector("#auto_spin_button"),
   balance: document.querySelector("#balance"),
   bet: document.querySelector("#bet"),
+  boostIndicator: document.querySelector("#boost_indicator"),
+  chestGrid: document.querySelector("#chest_grid"),
+  chestModal: document.querySelector("#chest_modal"),
   controls: document.querySelector("#controls"),
   decreaseBet: document.querySelector("#decrease_bet"),
   increaseBet: document.querySelector("#increase_bet"),
-  paylineList: document.querySelector("#payline_list"),
   paytableList: document.querySelector("#paytable_list"),
   paytablePanel: document.querySelector("#paytable_panel"),
   paytableToggle: document.querySelector("#paytable_toggle"),
   reels: Array.from(document.querySelectorAll(".reel")),
+  shopItems: document.querySelector("#shop_items"),
+  shopPanel: document.querySelector("#shop_panel"),
+  shopToggle: document.querySelector("#shop_toggle"),
   spinButton: document.querySelector("#spin_button"),
   status: document.querySelector("#status")
 };
@@ -53,12 +63,15 @@ const audio = createAudioFeedback();
 const state = {
   autoSpinning: false,
   balance: INITIAL_BALANCE,
+  boost: null,
+  chestOpen: false,
   controlsEnabled: true,
   spinning: false
 };
 
 renderPaytable();
-renderPaylines();
+renderShop();
+renderBoostIndicator();
 renderBalance();
 updateBetBounds();
 background.start();
@@ -69,6 +82,7 @@ elements.decreaseBet.addEventListener("click", () => adjustBet(-1));
 elements.increaseBet.addEventListener("click", () => adjustBet(1));
 elements.bet.addEventListener("input", updateBetBounds);
 elements.paytableToggle.addEventListener("click", togglePaytable);
+elements.shopToggle.addEventListener("click", toggleShop);
 
 /**
  * Handles one complete spin, with the result computed before animation starts.
@@ -102,12 +116,16 @@ async function handleAutoSpin() {
   try {
     for (let count = 0; count < AUTO_SPIN_COUNT && state.balance >= MIN_BET; count += 1) {
       await runSpin({ restoreControls: false });
+
+      if (state.balance < MIN_BET) {
+        break;
+      }
     }
   } finally {
     state.autoSpinning = false;
     state.spinning = false;
     updateBetBounds();
-    setControlsEnabled(state.balance >= MIN_BET);
+    setControlsEnabled(state.balance >= MIN_BET && !state.chestOpen);
   }
 }
 
@@ -131,6 +149,7 @@ async function runSpin({ restoreControls = true } = {}) {
 
   try {
     outcome = spin({ balance: startingBalance, bet });
+    outcome = applyBoostToOutcome(outcome);
     clearWinningCells();
     setTemporaryBalance(Math.max(0, startingBalance - bet));
     setStatus("Spinning...", "ready");
@@ -140,6 +159,7 @@ async function runSpin({ restoreControls = true } = {}) {
     state.balance = outcome.balance;
     announceOutcome(outcome);
     highlightWinningCells(outcome.wins);
+    consumeBoostSpin();
   } catch (error) {
     state.balance = outcome?.balance ?? startingBalance;
     setStatus(error.message, "loss");
@@ -149,7 +169,11 @@ async function runSpin({ restoreControls = true } = {}) {
     updateBetBounds();
 
     if (restoreControls) {
-      setControlsEnabled(state.balance >= MIN_BET);
+      setControlsEnabled(state.balance >= MIN_BET && !state.chestOpen);
+    }
+
+    if (state.balance < MIN_BET && !state.chestOpen) {
+      openChestModal();
     }
   }
 }
@@ -247,6 +271,47 @@ function announceOutcome(outcome) {
 }
 
 /**
+ * Applies the active payout boost to a resolved spin.
+ *
+ * @param {ReturnType<typeof spin>} outcome Resolved spin result.
+ * @returns {ReturnType<typeof spin>}
+ */
+function applyBoostToOutcome(outcome) {
+  if (!state.boost || outcome.payout === 0) {
+    return outcome;
+  }
+
+  const boostedPayout = outcome.payout * state.boost.multiplier;
+  const originalPayout = outcome.payout;
+
+  return {
+    ...outcome,
+    balance: outcome.balance + boostedPayout - originalPayout,
+    payout: boostedPayout,
+    totalMultiplier: outcome.totalMultiplier * state.boost.multiplier
+  };
+}
+
+/**
+ * Decrements boost duration after each completed spin.
+ *
+ * @returns {void}
+ */
+function consumeBoostSpin() {
+  if (!state.boost) {
+    return;
+  }
+
+  state.boost.spinsRemaining -= 1;
+  if (state.boost.spinsRemaining <= 0) {
+    state.boost = null;
+  }
+
+  renderBoostIndicator();
+  renderShop();
+}
+
+/**
  * @returns {void}
  */
 function renderPaytable() {
@@ -267,28 +332,6 @@ function renderPaytable() {
     });
 
   elements.paytableList.replaceChildren(...rows);
-}
-
-/**
- * @returns {void}
- */
-function renderPaylines() {
-  const rows = [
-    ["Rows may stay level or move one row up/down between adjacent reels."],
-    ["Winning paths can start on any reel and use adjacent reels only."],
-    [`${LEGAL_PATHS.length} legal 4- and 5-symbol paths are checked each spin.`]
-  ].map(([text]) => {
-    const row = document.createElement("div");
-    row.className = "payline_row";
-
-    const name = document.createElement("span");
-    name.textContent = text;
-
-    row.append(name);
-    return row;
-  });
-
-  elements.paylineList.replaceChildren(...rows);
 }
 
 /**
@@ -325,6 +368,121 @@ function togglePaytable() {
   elements.paytableToggle.setAttribute("aria-expanded", String(!expanded));
   elements.paytablePanel.hidden = expanded;
   elements.paytableToggle.querySelector(".paytable_tab_icon").textContent = expanded ? "+" : "-";
+}
+
+/**
+ * @returns {void}
+ */
+function toggleShop() {
+  const expanded = elements.shopToggle.getAttribute("aria-expanded") === "true";
+  elements.shopToggle.setAttribute("aria-expanded", String(!expanded));
+  elements.shopPanel.hidden = expanded;
+  elements.shopToggle.querySelector(".shop_tab_icon").textContent = expanded ? "+" : "-";
+}
+
+/**
+ * @returns {void}
+ */
+function renderShop() {
+  const items = SHOP_ITEMS.map((item) => {
+    const row = document.createElement("div");
+    row.className = "shop_item";
+
+    const copy = document.createElement("span");
+    copy.textContent = `${item.label} · ${BOOST_SPIN_COUNT} spins · ${item.cost} tokens`;
+
+    const button = document.createElement("button");
+    button.className = "shop_buy_button";
+    button.type = "button";
+    button.textContent = "Buy";
+    button.disabled = state.balance < item.cost || Boolean(state.boost) || state.spinning || state.autoSpinning;
+    button.addEventListener("click", () => buyBoost(item));
+
+    row.append(copy, button);
+    return row;
+  });
+
+  elements.shopItems.replaceChildren(...items);
+}
+
+/**
+ * @param {{ id: string, label: string, multiplier: number, cost: number }} item Shop boost.
+ * @returns {void}
+ */
+function buyBoost(item) {
+  if (state.balance < item.cost || state.boost || state.spinning || state.autoSpinning) {
+    return;
+  }
+
+  state.balance -= item.cost;
+  state.boost = {
+    id: item.id,
+    label: item.label,
+    multiplier: item.multiplier,
+    spinsRemaining: BOOST_SPIN_COUNT
+  };
+
+  renderBalance();
+  renderBoostIndicator();
+  renderShop();
+  updateBetBounds();
+  setStatus(`${item.label} active for ${BOOST_SPIN_COUNT} spins.`, "ready");
+}
+
+/**
+ * @returns {void}
+ */
+function renderBoostIndicator() {
+  if (!state.boost) {
+    elements.boostIndicator.hidden = true;
+    elements.boostIndicator.textContent = "";
+    return;
+  }
+
+  elements.boostIndicator.hidden = false;
+  elements.boostIndicator.textContent = `◆ Payout boost active · ${state.boost.spinsRemaining}`;
+}
+
+/**
+ * @returns {void}
+ */
+function openChestModal() {
+  state.chestOpen = true;
+  setControlsEnabled(false);
+  elements.chestModal.hidden = false;
+  renderChests();
+}
+
+/**
+ * @returns {void}
+ */
+function renderChests() {
+  const rewards = shuffleArray([...CHEST_REWARDS]);
+  const chests = rewards.map((reward, index) => {
+    const button = document.createElement("button");
+    button.className = "chest_button";
+    button.type = "button";
+    button.textContent = `Chest ${index + 1}`;
+    button.addEventListener("click", () => redeemChest(reward));
+    return button;
+  });
+
+  elements.chestGrid.replaceChildren(...chests);
+}
+
+/**
+ * @param {number} reward Token reward.
+ * @returns {void}
+ */
+function redeemChest(reward) {
+  state.balance = reward;
+  state.chestOpen = false;
+  elements.chestModal.hidden = true;
+  renderBalance();
+  updateBetBounds();
+  renderShop();
+  setControlsEnabled(state.balance >= MIN_BET);
+  setStatus(reward > 0 ? `Chest redeemed: ${reward} tokens.` : "Empty chest. Better luck next time.", "ready");
 }
 
 /**
@@ -403,6 +561,7 @@ function setControlsEnabled(enabled) {
   elements.spinButton.disabled = !enabled;
   elements.bet.disabled = !enabled;
   updateBetBounds();
+  renderShop();
 }
 
 /**
@@ -413,6 +572,22 @@ function setControlsEnabled(enabled) {
  */
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
+}
+
+/**
+ * Randomizes an array in place.
+ *
+ * @template T
+ * @param {T[]} items Items to shuffle.
+ * @returns {T[]}
+ */
+function shuffleArray(items) {
+  for (let index = items.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [items[index], items[swapIndex]] = [items[swapIndex], items[index]];
+  }
+
+  return items;
 }
 
 /**

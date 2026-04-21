@@ -1,7 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  CENTER_ROW_INDEX,
   LEGAL_PATHS,
   MAX_BET,
   MIN_BET,
@@ -11,7 +10,6 @@ import {
   evaluatePayline,
   evaluateReels,
   generateSpinResult,
-  getCenterPayline,
   getPayline,
   spin,
   validateBet
@@ -41,20 +39,7 @@ test("getPayline extracts any configured row pattern from the 3-by-5 grid", () =
   assert.deepEqual(getPayline(reels, [0, 1, 2, 1, 0]), ["7", "BAR", "7", "BAR", "ORB"]);
 });
 
-test("getCenterPayline still extracts the middle horizontal row", () => {
-  const reels = [
-    ["7", "BAR", "7"],
-    ["7", "BAR", "STAR"],
-    ["COMET", "BAR", "7"],
-    ["7", "BAR", "ORB"],
-    ["GEM", "BAR", "7"]
-  ];
-
-  assert.deepEqual(getCenterPayline(reels), Array(REEL_COUNT).fill("BAR"));
-  assert.equal(CENTER_ROW_INDEX, 1);
-});
-
-test("evaluatePayline uses the paytable for four and five left-to-right matches", () => {
+test("evaluatePayline uses the paytable for four and five matching symbols", () => {
   const win = evaluatePayline(["GEM", "GEM", "GEM", "GEM", "STAR"]);
   const expectedEntry = PAYTABLE.get("GEM:4");
 
@@ -69,7 +54,7 @@ test("evaluatePayline returns no match for fewer than four matches", () => {
   assert.equal(win.key, null);
 });
 
-test("evaluateReels totals multiple winning paylines", () => {
+test("evaluateReels totals multiple winning paths", () => {
   const reels = [
     ["7", "BAR", "COMET"],
     ["7", "BAR", "STAR"],
@@ -181,6 +166,18 @@ test("spin uses fallback options when called without arguments", () => {
   assert.equal(outcome.bet, MIN_BET);
   assert.equal(outcome.reels.length, REEL_COUNT);
   assert.ok(outcome.balance >= 0);
+});
+
+test("spin validates symbols before evaluating wins", () => {
+  const reels = [
+    ["STAR", "7", "ORB"],
+    ["COMET", "BAR", "BAR"],
+    ["GEM", "BAD", "STAR"],
+    ["ORB", "COMET", "COMET"],
+    ["BAR", "STAR", "GEM"]
+  ];
+
+  assert.throws(() => spin({ balance: 100, bet: 1, reels }), /Unknown reel symbol/);
 });
 
 test("legal paths cover all adjacent-row combinations without row skips", () => {

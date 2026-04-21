@@ -18,6 +18,10 @@
 
       <!-- Slot Machine -->
       <section class="machine" aria-label="Slot machine">
+        <div class="boost_indicator" id="boost_indicator" hidden>
+          <span aria-hidden="true">◆</span>
+          Payout boost active
+        </div>
 
         <!-- Header And Balance -->
         <div class="machine_header">
@@ -102,19 +106,48 @@
         </button>
         <div class="paytable_tab_panel" id="paytable_panel" hidden>
           <div class="paytable_rules">
-            <p>Wins are checked left to right across adjacent reels on the 3-by-5 grid.</p>
+            <p>Wins are checked across adjacent reels on the 3-by-5 grid.</p>
             <p>Four or five matching symbols pay when each step stays level or moves one row up/down. Wins may start on any reel.</p>
           </div>
-
-          <h2>Path Rules</h2>
-          <div id="payline_list" class="payline_list"></div>
 
           <h2>Symbol Payouts</h2>
           <div id="paytable_list" class="paytable_list"></div>
         </div>
       </section>
 
+
+      <!-- Shop -->
+      <section class="shop_tab" aria-labelledby="shop_title">
+        <button
+          class="shop_tab_button"
+          id="shop_toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="shop_panel"
+        >
+          <span id="shop_title">Shop</span>
+          <span class="shop_tab_icon" aria-hidden="true">+</span>
+        </button>
+        <div class="shop_tab_panel" id="shop_panel" hidden>
+          <div class="shop_rules">
+            <p>Buy one payout boost at a time. Boosts apply to the next 5 spins.</p>
+          </div>
+
+          <div class="shop_items" id="shop_items"></div>
+        </div>
+      </section>
+
     </main>
+
+
+    <!-- Redemption Chest Popup -->
+    <div class="modal_overlay" id="chest_modal" role="dialog" aria-modal="true" aria-labelledby="chest_title" hidden>
+      <div class="modal_panel">
+        <h2 id="chest_title">Choose A Chest</h2>
+        <p>Your tokens hit zero. Pick one chest for a comeback.</p>
+        <div class="chest_grid" id="chest_grid"></div>
+      </div>
+    </div>
 
 
     <!-- App Scripts -->

@@ -91,6 +91,26 @@ input {
   padding: clamp(18px, 4vw, 34px);
 }
 
+.boost_indicator {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  max-width: min(240px, calc(100% - 28px));
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 209, 102, 0.78);
+  border-radius: 6px;
+  color: var(--amber);
+  background: rgba(3, 5, 18, 0.9);
+  box-shadow: 0 0 16px rgba(255, 209, 102, 0.34);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.boost_indicator[hidden] {
+  display: none;
+}
+
 .machine_header {
   display: flex;
   align-items: flex-start;
@@ -324,11 +344,13 @@ input {
   background: linear-gradient(135deg, rgba(255, 209, 102, 0.28), rgba(47, 248, 255, 0.18));
 }
 
-.paytable_tab {
+.paytable_tab,
+.shop_tab {
   overflow: hidden;
 }
 
-.paytable_tab_button {
+.paytable_tab_button,
+.shop_tab_button {
   width: 100%;
   min-height: 54px;
   display: flex;
@@ -343,17 +365,20 @@ input {
   text-transform: uppercase;
 }
 
-.paytable_tab_button:hover {
+.paytable_tab_button:hover,
+.shop_tab_button:hover {
   color: var(--ink);
   box-shadow: inset 0 0 18px rgba(47, 248, 255, 0.24);
 }
 
-.paytable_tab_button span:first-child {
+.paytable_tab_button span:first-child,
+.shop_tab_button span:first-child {
   font-size: 1.1rem;
   font-weight: 700;
 }
 
-.paytable_tab_icon {
+.paytable_tab_icon,
+.shop_tab_icon {
   width: 30px;
   height: 30px;
   display: inline-flex;
@@ -364,41 +389,48 @@ input {
   color: var(--amber);
 }
 
-.paytable_tab_panel {
+.paytable_tab_panel,
+.shop_tab_panel {
   padding: 18px;
   border-top: 1px solid rgba(116, 232, 255, 0.24);
 }
 
-.paytable_tab_panel[hidden] {
+.paytable_tab_panel[hidden],
+.shop_tab_panel[hidden] {
   display: none;
 }
 
-.paytable_rules {
+.paytable_rules,
+.shop_rules {
   display: grid;
   gap: 8px;
   margin-bottom: 16px;
   color: var(--muted);
 }
 
-.paytable_rules p {
+.paytable_rules p,
+.shop_rules p {
   margin: 0;
 }
 
-.paytable_tab h2 {
+.paytable_tab h2,
+.shop_tab h2 {
   margin-top: 18px;
   font-size: 1rem;
   color: var(--ink);
 }
 
-.paytable_list {
+.paytable_list,
+.shop_items {
   display: grid;
   gap: 10px;
   margin-top: 10px;
 }
 
 .paytable_row,
-.payline_row {
+.shop_item {
   display: grid;
+  grid-template-columns: 1fr auto;
   gap: 12px;
   align-items: center;
   padding: 10px;
@@ -407,20 +439,74 @@ input {
   background: rgba(3, 5, 18, 0.64);
 }
 
-.payline_list {
-  display: grid;
-  gap: 8px;
-  margin-top: 10px;
-}
-
 .paytable_row span,
-.payline_row span {
+.shop_item span {
   min-width: 0;
 }
 
-.paytable_row strong,
-.payline_row strong {
+.paytable_row strong {
   color: var(--amber);
+}
+
+.shop_buy_button,
+.chest_button {
+  min-height: 40px;
+  border: 1px solid rgba(255, 209, 102, 0.68);
+  border-radius: 6px;
+  color: var(--ink);
+  background: rgba(8, 12, 34, 0.96);
+  cursor: pointer;
+}
+
+.shop_buy_button:hover,
+.chest_button:hover {
+  box-shadow: 0 0 18px rgba(255, 209, 102, 0.34);
+}
+
+.shop_buy_button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.modal_overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(2, 3, 13, 0.78);
+}
+
+.modal_overlay[hidden] {
+  display: none;
+}
+
+.modal_panel {
+  width: min(520px, 100%);
+  padding: 24px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-strong);
+  box-shadow: 0 0 34px rgba(47, 248, 255, 0.24);
+  text-align: center;
+}
+
+.modal_panel p {
+  color: var(--muted);
+}
+
+.chest_grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.chest_button {
+  min-height: 96px;
+  font-size: 1rem;
+  text-transform: uppercase;
 }
 
 .confetti {

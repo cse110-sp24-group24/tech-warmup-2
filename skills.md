@@ -40,11 +40,17 @@ Your code must be:
 - Player may trigger an auto-spin action that runs up to 5 spins automatically
 - Bet is deducted immediately on spin
 - A win occurs when symbols match on one or more valid 3-by-5 adjacent-row paths
-- Payout = bet × combined multiplier from all winning paylines
+- Payout = bet × combined multiplier from all winning paths
 - No match → player loses bet
 - Game ends when balance < minimum bet
 - A clean "Pay Table" tab must be visible below the slot machine
   - Opening the tab shows rules and symbol payouts
+- A clean "Shop" tab must be visible below the slot machine
+  - Opening the tab shows payout boosts that can be bought with tokens
+- Payout boosts last for the next 5 spins
+- When a payout boost is active, an icon with "payout boost active" must appear in the top corner of the slot machine
+- When the player runs out of tokens, show a redemption popup with 3 chests
+  - Chest rewards are 50 tokens, 500 tokens, and 0 tokens
 - Winning boxes must be highlighted after each spin
 
 ---
@@ -59,12 +65,12 @@ Your code must be:
   - UI only displays precomputed result
 - Use a structured Paytable object (Map / Dictionary)
   - Do NOT use long if/else chains
-- Evaluate all legal adjacent-row paths, left to right
+- Evaluate all legal adjacent-row paths
   - Paths may start on any reel
   - Paths move across adjacent reels only
   - Each step may stay on the same row or move one row up/down
   - Paths cannot skip from top row directly to bottom row, or bottom row directly to top row
-- A path wins when 4 or 5 matching symbols appear consecutively from the left
+- A path wins when 4 or 5 matching symbols appear on consecutive adjacent reels
 - Multiple winning paths may pay on the same spin
 - Prevent balance from going below zero
 
