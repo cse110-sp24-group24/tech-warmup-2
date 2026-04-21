@@ -210,22 +210,57 @@ h2 {
   padding: 6px;
   border-bottom: 1px solid rgba(170, 183, 214, 0.18);
   color: var(--ink);
-  font-size: clamp(0.78rem, 2vw, 1.45rem);
+  font-size: clamp(1.55rem, 4vw, 3rem);
   font-weight: 700;
   text-align: center;
   text-shadow: 0 0 10px currentColor;
   word-break: break-word;
 }
 
-.symbol--center {
+.symbol[data-symbol="7"] {
   color: var(--amber);
+}
+
+.symbol[data-symbol="BAR"] {
+  color: var(--cyan);
+}
+
+.symbol[data-symbol="GEM"] {
+  color: #75ffcf;
+}
+
+.symbol[data-symbol="STAR"] {
+  color: #fff3a6;
+}
+
+.symbol[data-symbol="ORB"] {
+  color: var(--purple);
+}
+
+.symbol[data-symbol="COMET"] {
+  color: var(--magenta);
+}
+
+.symbol--center {
   background: rgba(255, 255, 255, 0.06);
 }
 
 .symbol--top,
 .symbol--bottom {
-  color: var(--muted);
   opacity: 0.7;
+}
+
+.symbol.is-winning {
+  position: relative;
+  z-index: 1;
+  color: var(--amber);
+  background: rgba(255, 209, 102, 0.2);
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 209, 102, 0.94),
+    inset 0 0 24px rgba(255, 61, 242, 0.38),
+    0 0 20px rgba(255, 209, 102, 0.62);
+  opacity: 1;
+  animation: winning-cell-pulse 0.76s ease-in-out infinite;
 }
 
 .payline-guide {
@@ -394,7 +429,6 @@ input {
 .paytable-row,
 .payline-row {
   display: grid;
-  grid-template-columns: 1fr auto;
   gap: 12px;
   align-items: center;
   padding: 10px;
@@ -435,6 +469,12 @@ input {
   50% {
     transform: scale(1.02);
     box-shadow: 0 0 22px rgba(255, 209, 102, 0.42);
+  }
+}
+
+@keyframes winning-cell-pulse {
+  50% {
+    transform: scale(1.06);
   }
 }
 
@@ -479,7 +519,7 @@ input {
   }
 
   .symbol {
-    font-size: 0.68rem;
+    font-size: 1.35rem;
     padding: 3px;
   }
 }

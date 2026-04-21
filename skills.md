@@ -37,12 +37,13 @@ Your code must be:
 - Each spin requires a bet amount
   - Must have defined minimum and maximum bet
 - Bet is deducted immediately on spin
-- A win occurs when symbols match on one or more valid 3-by-5 slot paylines
+- A win occurs when symbols match on one or more valid 3-by-5 adjacent-row paths
 - Payout = bet × combined multiplier from all winning paylines
 - No match → player loses bet
 - Game ends when balance < minimum bet
 - A clean "Pay Table" tab must be visible below the slot machine
-  - Opening the tab shows rules, active paylines, and symbol payouts
+  - Opening the tab shows rules and symbol payouts
+- Winning boxes must be highlighted after each spin
 
 ---
 
@@ -56,18 +57,13 @@ Your code must be:
   - UI only displays precomputed result
 - Use a structured Paytable object (Map / Dictionary)
   - Do NOT use long if/else chains
-- Evaluate multiple traditional 3-by-5 paylines, left to right
-  - Top row
-  - Middle row
-  - Bottom row
-  - Diagonal down
-  - Diagonal up
-  - V shape
-  - Inverted V shape
-  - Upper zigzag
-  - Lower zigzag
-- A payline wins when 3, 4, or 5 matching symbols appear consecutively from the left
-- Multiple winning paylines may pay on the same spin
+- Evaluate all legal adjacent-row paths, left to right
+  - Paths start on the leftmost reel
+  - Paths move across adjacent reels only
+  - Each step may stay on the same row or move one row up/down
+  - Paths cannot skip from top row directly to bottom row, or bottom row directly to top row
+- A path wins when 3, 4, or 5 matching symbols appear consecutively from the left
+- Multiple winning paths may pay on the same spin
 - Prevent balance from going below zero
 
 ---
@@ -75,6 +71,7 @@ Your code must be:
 ## Visuals & Sounds
 
 - Retro theme (pixel-art inspired slot machine)
+- Slot cells should display emblems instead of plain symbol text
 - Smooth reel animations
 - Distinct visual/audio feedback:
   - Wins

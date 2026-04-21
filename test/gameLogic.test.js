@@ -2,10 +2,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   CENTER_ROW_INDEX,
+  LEGAL_PATHS,
   MAX_BET,
   MIN_BET,
   PAYTABLE,
-  PAYLINES,
   REEL_COUNT,
   ROW_COUNT,
   evaluatePayline,
@@ -77,10 +77,51 @@ test("evaluateReels totals multiple winning paylines", () => {
     ["GEM", "BAR", "7"],
     ["ORB", "BAR", "GEM"]
   ];
-  const evaluation = evaluateReels(reels);
+  const evaluation = evaluateReels(reels, [
+    [0, 0, 0, 0, 0],
+    [1, 1, 1, 1, 1]
+  ]);
 
   assert.equal(evaluation.wins.length, 2);
   assert.equal(evaluation.totalMultiplier, PAYTABLE.get("7:3").multiplier + PAYTABLE.get("BAR:5").multiplier);
+});
+
+test("evaluateReels pays same-symbol paths across adjacent rows without requiring fixed shapes", () => {
+  const reels = [
+    ["STAR", "GEM", "COMET"],
+    ["7", "STAR", "COMET"],
+    ["7", "GEM", "STAR"],
+    ["GEM", "COMET", "STAR"],
+    ["ORB", "STAR", "7"]
+  ];
+  const evaluation = evaluateReels(reels, [[0, 1, 2, 2, 1]]);
+
+  assert.equal(evaluation.wins.length, 1);
+  assert.equal(evaluation.wins[0].matchedSymbol, "STAR");
+  assert.deepEqual(evaluation.wins[0].cells, [
+    { reelIndex: 0, rowIndex: 0 },
+    { reelIndex: 1, rowIndex: 1 },
+    { reelIndex: 2, rowIndex: 2 },
+    { reelIndex: 3, rowIndex: 2 },
+    { reelIndex: 4, rowIndex: 1 }
+  ]);
+});
+
+test("evaluateReels ignores shorter prefix wins when the same path reaches farther right", () => {
+  const reels = [
+    ["STAR", "GEM", "COMET"],
+    ["STAR", "7", "COMET"],
+    ["STAR", "GEM", "7"],
+    ["STAR", "COMET", "7"],
+    ["STAR", "GEM", "7"]
+  ];
+  const evaluation = evaluateReels(reels, [
+    [0, 0, 0, 0, 0],
+    [0, 0, 0, 1, 1]
+  ]);
+
+  assert.equal(evaluation.wins.length, 1);
+  assert.equal(evaluation.wins[0].matchedCount, 5);
 });
 
 test("spin deducts bet immediately and adds combined payline payout", () => {
@@ -114,9 +155,15 @@ test("spin prevents balance from going below zero", () => {
   assert.equal(outcome.gameOver, true);
 });
 
-test("traditional rules define nine active paylines", () => {
-  assert.equal(PAYLINES.length, 9);
-  PAYLINES.forEach((payline) => assert.equal(payline.rows.length, REEL_COUNT));
+test("legal paths cover all adjacent-row combinations without row skips", () => {
+  assert.equal(LEGAL_PATHS.length, 99);
+  LEGAL_PATHS.forEach((path) => {
+    assert.equal(path.length, REEL_COUNT);
+
+    for (let index = 1; index < path.length; index += 1) {
+      assert.ok(Math.abs(path[index] - path[index - 1]) <= 1);
+    }
+  });
 });
 
 test("validateBet enforces minimum, maximum, integer, and balance rules", () => {

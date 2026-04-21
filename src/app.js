@@ -1,16 +1,33 @@
 import {
   BIG_WIN_MULTIPLIER,
   INITIAL_BALANCE,
+  LEGAL_PATHS,
   MAX_BET,
   MIN_BET,
   PAYTABLE,
-  PAYLINES,
   spin
 } from "./gameLogic.js";
 import { RetroSpaceBackground } from "./spaceBackground.js";
 
 const SPIN_DURATION_MS = 950;
 const REEL_STOP_STAGGER_MS = 130;
+const SYMBOL_EMBLEMS = Object.freeze({
+  "7": "7",
+  BAR: "▰",
+  GEM: "◆",
+  STAR: "★",
+  ORB: "◎",
+  COMET: "☄"
+});
+
+const SYMBOL_LABELS = Object.freeze({
+  "7": "Seven",
+  BAR: "Bar",
+  GEM: "Gem",
+  STAR: "Star",
+  ORB: "Orb",
+  COMET: "Comet"
+});
 
 const elements = {
   balance: document.querySelector("#balance"),
@@ -68,6 +85,7 @@ async function handleSpin(event) {
     state.balance = Math.max(0, state.balance - bet);
     state.spinning = true;
     setControlsEnabled(false);
+    clearWinningCells();
     renderBalance();
     setStatus("Spinning...", "ready");
 
@@ -77,6 +95,7 @@ async function handleSpin(event) {
     state.spinning = false;
     renderBalance();
     announceOutcome(outcome);
+    highlightWinningCells(outcome.wins);
     updateBetBounds();
     setControlsEnabled(!outcome.gameOver);
   } catch (error) {
@@ -116,7 +135,31 @@ function animateReels(reels) {
 function renderReel(reel, symbols) {
   const symbolNodes = reel.querySelectorAll(".symbol");
   symbolNodes.forEach((node, index) => {
-    node.textContent = symbols[index];
+    const symbol = symbols[index];
+    node.textContent = SYMBOL_EMBLEMS[symbol];
+    node.dataset.symbol = symbol;
+    node.setAttribute("aria-label", SYMBOL_LABELS[symbol]);
+  });
+}
+
+/**
+ * @returns {void}
+ */
+function clearWinningCells() {
+  document.querySelectorAll(".symbol.is-winning").forEach((symbol) => {
+    symbol.classList.remove("is-winning");
+  });
+}
+
+/**
+ * @param {ReturnType<typeof spin>["wins"]} wins Winning paths.
+ * @returns {void}
+ */
+function highlightWinningCells(wins) {
+  wins.forEach((win) => {
+    win.cells.forEach((cell) => {
+      elements.reels[cell.reelIndex].querySelectorAll(".symbol")[cell.rowIndex].classList.add("is-winning");
+    });
   });
 }
 
@@ -155,8 +198,8 @@ function renderPaytable() {
       const row = document.createElement("div");
       row.className = "paytable-row";
 
-      const label = document.createElement("span");
-      label.textContent = entry.label;
+    const label = document.createElement("span");
+    label.textContent = `${entry.count} ${SYMBOL_EMBLEMS[entry.symbol]} ${entry.symbol}`;
 
       const multiplier = document.createElement("strong");
       multiplier.textContent = `${entry.multiplier}x`;
@@ -172,17 +215,18 @@ function renderPaytable() {
  * @returns {void}
  */
 function renderPaylines() {
-  const rows = PAYLINES.map((payline, index) => {
+  const rows = [
+    ["Rows may stay level or move one row up/down between adjacent reels."],
+    ["Winning paths start from the left reel and use adjacent reels only."],
+    [`${LEGAL_PATHS.length} legal paths are checked each spin; fixed V/diagonal shapes are not required.`]
+  ].map(([text]) => {
     const row = document.createElement("div");
     row.className = "payline-row";
 
     const name = document.createElement("span");
-    name.textContent = `${index + 1}. ${payline.name}`;
+    name.textContent = text;
 
-    const pattern = document.createElement("strong");
-    pattern.textContent = payline.rows.map((rowIndex) => rowIndex + 1).join("-");
-
-    row.append(name, pattern);
+    row.append(name);
     return row;
   });
 

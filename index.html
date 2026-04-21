@@ -27,31 +27,31 @@
           Ready to spin.
         </div>
 
-        <div class="reels" id="reels" aria-label="Five independent reels">
-          <div class="reel" data-reel="0" aria-label="Reel 1">
-            <div class="symbol symbol--top">ORB</div>
-            <div class="symbol symbol--center">7</div>
-            <div class="symbol symbol--bottom">GEM</div>
+        <div class="reels" id="reels" role="group" aria-label="Five independent reels">
+          <div class="reel" data-reel="0" role="group" aria-label="Reel 1">
+            <div class="symbol symbol--top" role="img" aria-label="Orb" data-symbol="ORB">◎</div>
+            <div class="symbol symbol--center" role="img" aria-label="Seven" data-symbol="7">7</div>
+            <div class="symbol symbol--bottom" role="img" aria-label="Gem" data-symbol="GEM">◆</div>
           </div>
-          <div class="reel" data-reel="1" aria-label="Reel 2">
-            <div class="symbol symbol--top">GEM</div>
-            <div class="symbol symbol--center">BAR</div>
-            <div class="symbol symbol--bottom">STAR</div>
+          <div class="reel" data-reel="1" role="group" aria-label="Reel 2">
+            <div class="symbol symbol--top" role="img" aria-label="Gem" data-symbol="GEM">◆</div>
+            <div class="symbol symbol--center" role="img" aria-label="Bar" data-symbol="BAR">▰</div>
+            <div class="symbol symbol--bottom" role="img" aria-label="Star" data-symbol="STAR">★</div>
           </div>
-          <div class="reel" data-reel="2" aria-label="Reel 3">
-            <div class="symbol symbol--top">STAR</div>
-            <div class="symbol symbol--center">ORB</div>
-            <div class="symbol symbol--bottom">COMET</div>
+          <div class="reel" data-reel="2" role="group" aria-label="Reel 3">
+            <div class="symbol symbol--top" role="img" aria-label="Star" data-symbol="STAR">★</div>
+            <div class="symbol symbol--center" role="img" aria-label="Orb" data-symbol="ORB">◎</div>
+            <div class="symbol symbol--bottom" role="img" aria-label="Comet" data-symbol="COMET">☄</div>
           </div>
-          <div class="reel" data-reel="3" aria-label="Reel 4">
-            <div class="symbol symbol--top">COMET</div>
-            <div class="symbol symbol--center">GEM</div>
-            <div class="symbol symbol--bottom">BAR</div>
+          <div class="reel" data-reel="3" role="group" aria-label="Reel 4">
+            <div class="symbol symbol--top" role="img" aria-label="Comet" data-symbol="COMET">☄</div>
+            <div class="symbol symbol--center" role="img" aria-label="Gem" data-symbol="GEM">◆</div>
+            <div class="symbol symbol--bottom" role="img" aria-label="Bar" data-symbol="BAR">▰</div>
           </div>
-          <div class="reel" data-reel="4" aria-label="Reel 5">
-            <div class="symbol symbol--top">BAR</div>
-            <div class="symbol symbol--center">STAR</div>
-            <div class="symbol symbol--bottom">7</div>
+          <div class="reel" data-reel="4" role="group" aria-label="Reel 5">
+            <div class="symbol symbol--top" role="img" aria-label="Bar" data-symbol="BAR">▰</div>
+            <div class="symbol symbol--center" role="img" aria-label="Star" data-symbol="STAR">★</div>
+            <div class="symbol symbol--bottom" role="img" aria-label="Seven" data-symbol="7">7</div>
           </div>
         </div>
 
@@ -88,10 +88,10 @@
         </button>
         <div class="paytable-tab__panel" id="paytable-panel" hidden>
           <div class="paytable-rules">
-            <p>Wins are checked left to right on nine active paylines across the 3-by-5 grid.</p>
-            <p>Three, four, or five matching symbols pay. Multiple paylines can win on the same spin.</p>
+            <p>Wins are checked left to right across adjacent reels on the 3-by-5 grid.</p>
+            <p>Three, four, or five matching symbols pay when each step stays level or moves one row up/down.</p>
           </div>
-          <h2>Paylines</h2>
+          <h2>Path Rules</h2>
           <div id="payline-list" class="payline-list"></div>
           <h2>Symbol Payouts</h2>
           <div id="paytable-list" class="paytable__list"></div>
