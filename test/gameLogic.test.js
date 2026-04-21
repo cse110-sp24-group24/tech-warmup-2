@@ -54,16 +54,16 @@ test("getCenterPayline still extracts the middle horizontal row", () => {
   assert.equal(CENTER_ROW_INDEX, 1);
 });
 
-test("evaluatePayline uses the paytable for left-to-right matches", () => {
-  const win = evaluatePayline(["GEM", "GEM", "GEM", "STAR", "GEM"]);
-  const expectedEntry = PAYTABLE.get("GEM:3");
+test("evaluatePayline uses the paytable for four and five left-to-right matches", () => {
+  const win = evaluatePayline(["GEM", "GEM", "GEM", "GEM", "STAR"]);
+  const expectedEntry = PAYTABLE.get("GEM:4");
 
-  assert.equal(win.key, "GEM:3");
+  assert.equal(win.key, "GEM:4");
   assert.equal(win.multiplier, expectedEntry.multiplier);
 });
 
-test("evaluatePayline returns no match for fewer than three center matches", () => {
-  const win = evaluatePayline(["ORB", "ORB", "COMET", "ORB", "ORB"]);
+test("evaluatePayline returns no match for fewer than four matches", () => {
+  const win = evaluatePayline(["ORB", "ORB", "ORB", "COMET"]);
 
   assert.equal(win.multiplier, 0);
   assert.equal(win.key, null);
@@ -74,16 +74,16 @@ test("evaluateReels totals multiple winning paylines", () => {
     ["7", "BAR", "COMET"],
     ["7", "BAR", "STAR"],
     ["7", "BAR", "ORB"],
-    ["GEM", "BAR", "7"],
+    ["7", "BAR", "7"],
     ["ORB", "BAR", "GEM"]
   ];
   const evaluation = evaluateReels(reels, [
-    { startReel: 0, rows: [0, 0, 0] },
+    { startReel: 0, rows: [0, 0, 0, 0] },
     { startReel: 0, rows: [1, 1, 1, 1, 1] }
   ]);
 
   assert.equal(evaluation.wins.length, 2);
-  assert.equal(evaluation.totalMultiplier, PAYTABLE.get("7:3").multiplier + PAYTABLE.get("BAR:5").multiplier);
+  assert.equal(evaluation.totalMultiplier, PAYTABLE.get("7:4").multiplier + PAYTABLE.get("BAR:5").multiplier);
 });
 
 test("evaluateReels pays same-symbol paths across adjacent rows without requiring fixed shapes", () => {
@@ -130,16 +130,17 @@ test("evaluateReels allows winning combinations to start from any reel", () => {
     ["STAR", "7", "COMET"],
     ["ORB", "STAR", "GEM"],
     ["BAR", "STAR", "COMET"],
-    ["GEM", "7", "STAR"]
+    ["GEM", "STAR", "7"]
   ];
-  const evaluation = evaluateReels(reels, [{ startReel: 2, rows: [1, 1, 2] }]);
+  const evaluation = evaluateReels(reels, [{ startReel: 1, rows: [0, 1, 1, 1] }]);
 
   assert.equal(evaluation.wins.length, 1);
   assert.equal(evaluation.wins[0].matchedSymbol, "STAR");
   assert.deepEqual(evaluation.wins[0].cells, [
+    { reelIndex: 1, rowIndex: 0 },
     { reelIndex: 2, rowIndex: 1 },
     { reelIndex: 3, rowIndex: 1 },
-    { reelIndex: 4, rowIndex: 2 }
+    { reelIndex: 4, rowIndex: 1 }
   ]);
 });
 
@@ -174,10 +175,18 @@ test("spin prevents balance from going below zero", () => {
   assert.equal(outcome.gameOver, true);
 });
 
+test("spin uses fallback options when called without arguments", () => {
+  const outcome = spin();
+
+  assert.equal(outcome.bet, MIN_BET);
+  assert.equal(outcome.reels.length, REEL_COUNT);
+  assert.ok(outcome.balance >= 0);
+});
+
 test("legal paths cover all adjacent-row combinations without row skips", () => {
-  assert.equal(LEGAL_PATHS.length, 232);
+  assert.equal(LEGAL_PATHS.length, 181);
   LEGAL_PATHS.forEach((path) => {
-    assert.ok(path.rows.length >= 3);
+    assert.ok(path.rows.length >= 4);
     assert.ok(path.rows.length <= REEL_COUNT);
     assert.ok(path.startReel >= 0);
     assert.ok(path.startReel + path.rows.length <= REEL_COUNT);

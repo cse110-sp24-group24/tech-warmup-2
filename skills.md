@@ -33,9 +33,11 @@ Your code must be:
 
 ## Game Rules
 
+- Game name is "Kode Bryant Casino"
 - Player starts with a fixed token balance
 - Each spin requires a bet amount
   - Must have defined minimum and maximum bet
+- Player may trigger an auto-spin action that runs up to 5 spins automatically
 - Bet is deducted immediately on spin
 - A win occurs when symbols match on one or more valid 3-by-5 adjacent-row paths
 - Payout = bet × combined multiplier from all winning paylines
@@ -62,7 +64,7 @@ Your code must be:
   - Paths move across adjacent reels only
   - Each step may stay on the same row or move one row up/down
   - Paths cannot skip from top row directly to bottom row, or bottom row directly to top row
-- A path wins when 3, 4, or 5 matching symbols appear consecutively from the left
+- A path wins when 4 or 5 matching symbols appear consecutively from the left
 - Multiple winning paths may pay on the same spin
 - Prevent balance from going below zero
 

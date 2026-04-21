@@ -38,19 +38,19 @@ input {
   font: inherit;
 }
 
-#space-background,
-.crt-overlay {
+#space_background,
+.crt_overlay {
   position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
 }
 
-#space-background {
+#space_background {
   z-index: -2;
 }
 
-.crt-overlay {
+.crt_overlay {
   z-index: -1;
   pointer-events: none;
   background:
@@ -66,7 +66,7 @@ input {
   opacity: 0.36;
 }
 
-.game-shell {
+.game_shell {
   width: min(920px, calc(100% - 32px));
   min-height: 100vh;
   margin: 0 auto;
@@ -78,7 +78,7 @@ input {
 }
 
 .machine,
-.paytable-tab {
+.paytable_tab {
   border: 2px solid var(--border);
   border-radius: 8px;
   background: var(--panel);
@@ -91,7 +91,7 @@ input {
   padding: clamp(18px, 4vw, 34px);
 }
 
-.machine__header {
+.machine_header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -99,7 +99,7 @@ input {
 }
 
 .eyebrow,
-.paytable__note {
+.paytable_note {
   margin: 0;
   color: var(--muted);
   font-size: 0.84rem;
@@ -123,7 +123,7 @@ h2 {
   font-size: 1.35rem;
 }
 
-.balance-panel {
+.balance_panel {
   min-width: 132px;
   padding: 12px;
   border: 1px solid rgba(255, 209, 102, 0.62);
@@ -133,14 +133,14 @@ h2 {
   color: var(--amber);
 }
 
-.balance-panel span {
+.balance_panel span {
   display: block;
   color: var(--muted);
   font-size: 0.75rem;
   text-transform: uppercase;
 }
 
-.balance-panel strong {
+.balance_panel strong {
   font-size: 2rem;
 }
 
@@ -158,18 +158,18 @@ h2 {
   text-transform: uppercase;
 }
 
-.status--win {
+.status_win {
   color: var(--green);
   border-color: rgba(84, 255, 173, 0.64);
 }
 
-.status--big {
+.status_big {
   color: var(--amber);
   border-color: rgba(255, 209, 102, 0.74);
   animation: big-win-pulse 0.8s ease-in-out 4;
 }
 
-.status--loss {
+.status_loss {
   color: var(--danger);
   border-color: rgba(255, 94, 122, 0.62);
 }
@@ -198,7 +198,7 @@ h2 {
   box-shadow: inset 0 0 22px rgba(74, 168, 255, 0.28);
 }
 
-.reel.is-spinning .symbol {
+.reel.is_spinning .symbol {
   animation: reel-blur 0.16s linear infinite;
 }
 
@@ -241,7 +241,7 @@ h2 {
   color: var(--magenta);
 }
 
-.symbol.is-winning {
+.symbol.is_winning {
   position: relative;
   z-index: 1;
   color: var(--amber);
@@ -257,7 +257,7 @@ h2 {
 .controls {
   margin-top: 22px;
   display: grid;
-  grid-template-columns: auto minmax(160px, 230px) minmax(150px, 1fr);
+  grid-template-columns: auto minmax(160px, 230px) minmax(130px, 1fr) minmax(130px, 1fr);
   gap: 12px;
   align-items: center;
 }
@@ -267,14 +267,15 @@ h2 {
   text-transform: uppercase;
 }
 
-.bet-control {
+.bet_control {
   display: grid;
   grid-template-columns: 44px minmax(72px, 1fr) 44px;
   gap: 8px;
 }
 
-.icon-button,
-.spin-button {
+.icon_button,
+.spin_button,
+.auto_spin_button {
   min-height: 44px;
   border: 1px solid rgba(47, 248, 255, 0.72);
   border-radius: 6px;
@@ -283,13 +284,15 @@ h2 {
   cursor: pointer;
 }
 
-.icon-button:hover,
-.spin-button:hover {
+.icon_button:hover,
+.spin_button:hover,
+.auto_spin_button:hover {
   box-shadow: 0 0 18px rgba(47, 248, 255, 0.42);
 }
 
-.icon-button:disabled,
-.spin-button:disabled,
+.icon_button:disabled,
+.spin_button:disabled,
+.auto_spin_button:disabled,
 input:disabled {
   cursor: not-allowed;
   opacity: 0.55;
@@ -305,7 +308,8 @@ input {
   text-align: center;
 }
 
-.spin-button {
+.spin_button,
+.auto_spin_button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -315,11 +319,16 @@ input {
   text-transform: uppercase;
 }
 
-.paytable-tab {
+.auto_spin_button {
+  border-color: rgba(255, 209, 102, 0.72);
+  background: linear-gradient(135deg, rgba(255, 209, 102, 0.28), rgba(47, 248, 255, 0.18));
+}
+
+.paytable_tab {
   overflow: hidden;
 }
 
-.paytable-tab__button {
+.paytable_tab_button {
   width: 100%;
   min-height: 54px;
   display: flex;
@@ -334,17 +343,17 @@ input {
   text-transform: uppercase;
 }
 
-.paytable-tab__button:hover {
+.paytable_tab_button:hover {
   color: var(--ink);
   box-shadow: inset 0 0 18px rgba(47, 248, 255, 0.24);
 }
 
-.paytable-tab__button span:first-child {
+.paytable_tab_button span:first-child {
   font-size: 1.1rem;
   font-weight: 700;
 }
 
-.paytable-tab__icon {
+.paytable_tab_icon {
   width: 30px;
   height: 30px;
   display: inline-flex;
@@ -355,40 +364,40 @@ input {
   color: var(--amber);
 }
 
-.paytable-tab__panel {
+.paytable_tab_panel {
   padding: 18px;
   border-top: 1px solid rgba(116, 232, 255, 0.24);
 }
 
-.paytable-tab__panel[hidden] {
+.paytable_tab_panel[hidden] {
   display: none;
 }
 
-.paytable-rules {
+.paytable_rules {
   display: grid;
   gap: 8px;
   margin-bottom: 16px;
   color: var(--muted);
 }
 
-.paytable-rules p {
+.paytable_rules p {
   margin: 0;
 }
 
-.paytable-tab h2 {
+.paytable_tab h2 {
   margin-top: 18px;
   font-size: 1rem;
   color: var(--ink);
 }
 
-.paytable__list {
+.paytable_list {
   display: grid;
   gap: 10px;
   margin-top: 10px;
 }
 
-.paytable-row,
-.payline-row {
+.paytable_row,
+.payline_row {
   display: grid;
   gap: 12px;
   align-items: center;
@@ -398,19 +407,19 @@ input {
   background: rgba(3, 5, 18, 0.64);
 }
 
-.payline-list {
+.payline_list {
   display: grid;
   gap: 8px;
   margin-top: 10px;
 }
 
-.paytable-row span,
-.payline-row span {
+.paytable_row span,
+.payline_row span {
   min-width: 0;
 }
 
-.paytable-row strong,
-.payline-row strong {
+.paytable_row strong,
+.payline_row strong {
   color: var(--amber);
 }
 
@@ -422,7 +431,7 @@ input {
   overflow: hidden;
 }
 
-.confetti-piece {
+.confetti_piece {
   position: absolute;
   top: -16px;
   left: var(--x);
@@ -466,29 +475,29 @@ input {
 }
 
 @media (max-width: 860px) {
-  .game-shell {
+  .game_shell {
     grid-template-columns: 1fr;
     align-items: start;
     padding-top: 18px;
   }
 
-  .machine__header,
+  .machine_header,
   .controls {
     grid-template-columns: 1fr;
   }
 
-  .machine__header {
+  .machine_header {
     flex-direction: column;
   }
 
-  .balance-panel {
+  .balance_panel {
     width: 100%;
     text-align: left;
   }
 }
 
 @media (max-width: 560px) {
-  .game-shell {
+  .game_shell {
     width: min(100% - 18px, 1180px);
   }
 

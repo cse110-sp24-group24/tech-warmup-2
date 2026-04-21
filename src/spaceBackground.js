@@ -331,12 +331,13 @@ export class RetroSpaceBackground {
    * @param {CanvasRenderingContext2D} ctx Canvas context.
    * @param {number} width View width.
    * @param {number} height View height.
+   * @param {number} time Animation timestamp.
    * @returns {void}
    */
-  drawParticles(ctx, width, height) {
+  drawParticles(ctx, width, height, time) {
     this.particles.forEach((particle) => {
       particle.y -= particle.speed;
-      particle.x += Math.sin(particle.y * 0.01) * 0.2;
+      particle.x += Math.sin(time * 0.001 + particle.y * 0.01) * 0.2;
 
       if (particle.y < -10) {
         particle.y = height + 10;

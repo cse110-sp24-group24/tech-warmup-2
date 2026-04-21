@@ -3,29 +3,29 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Retro Space Slots</title>
+    <title>Kode Bryant Casino</title>
     <link rel="stylesheet" href="styles.css">
   </head>
 
   <body>
     <!-- Animated Background -->
-    <canvas id="space-background" aria-hidden="true"></canvas>
-    <div class="crt-overlay" aria-hidden="true"></div>
+    <canvas id="space_background" aria-hidden="true"></canvas>
+    <div class="crt_overlay" aria-hidden="true"></div>
 
 
     <!-- Game Layout -->
-    <main class="game-shell" aria-labelledby="game-title">
+    <main class="game_shell" aria-labelledby="game_title">
 
       <!-- Slot Machine -->
       <section class="machine" aria-label="Slot machine">
 
         <!-- Header And Balance -->
-        <div class="machine__header">
+        <div class="machine_header">
           <div>
-            <p class="eyebrow">Pixel Orbit Casino</p>
-            <h1 id="game-title">Retro Space Slots</h1>
+            <p class="eyebrow">Kode Bryant Casino</p>
+            <h1 id="game_title">Kode Bryant Casino</h1>
           </div>
-          <div class="balance-panel" aria-live="polite">
+          <div class="balance_panel" aria-live="polite">
             <span>Tokens</span>
             <strong id="balance">100</strong>
           </div>
@@ -33,7 +33,7 @@
 
 
         <!-- Game Status -->
-        <div id="status" class="status status--ready" role="status" aria-live="polite">
+        <div id="status" class="status status_ready" role="status" aria-live="polite">
           Ready to spin.
         </div>
 
@@ -41,29 +41,29 @@
         <!-- Reel Play Area -->
         <div class="reels" id="reels" role="group" aria-label="Five independent reels">
           <div class="reel" data-reel="0" role="group" aria-label="Reel 1">
-            <div class="symbol symbol--top" role="img" aria-label="Orb" data-symbol="ORB">◎</div>
-            <div class="symbol symbol--center" role="img" aria-label="Seven" data-symbol="7">7</div>
-            <div class="symbol symbol--bottom" role="img" aria-label="Gem" data-symbol="GEM">◆</div>
+            <div class="symbol symbol_top" role="img" aria-label="Orb" data-symbol="ORB">◎</div>
+            <div class="symbol symbol_center" role="img" aria-label="Seven" data-symbol="7">7</div>
+            <div class="symbol symbol_bottom" role="img" aria-label="Gem" data-symbol="GEM">◆</div>
           </div>
           <div class="reel" data-reel="1" role="group" aria-label="Reel 2">
-            <div class="symbol symbol--top" role="img" aria-label="Gem" data-symbol="GEM">◆</div>
-            <div class="symbol symbol--center" role="img" aria-label="Bar" data-symbol="BAR">▰</div>
-            <div class="symbol symbol--bottom" role="img" aria-label="Star" data-symbol="STAR">★</div>
+            <div class="symbol symbol_top" role="img" aria-label="Gem" data-symbol="GEM">◆</div>
+            <div class="symbol symbol_center" role="img" aria-label="Bar" data-symbol="BAR">▰</div>
+            <div class="symbol symbol_bottom" role="img" aria-label="Star" data-symbol="STAR">★</div>
           </div>
           <div class="reel" data-reel="2" role="group" aria-label="Reel 3">
-            <div class="symbol symbol--top" role="img" aria-label="Star" data-symbol="STAR">★</div>
-            <div class="symbol symbol--center" role="img" aria-label="Orb" data-symbol="ORB">◎</div>
-            <div class="symbol symbol--bottom" role="img" aria-label="Comet" data-symbol="COMET">☄</div>
+            <div class="symbol symbol_top" role="img" aria-label="Star" data-symbol="STAR">★</div>
+            <div class="symbol symbol_center" role="img" aria-label="Orb" data-symbol="ORB">◎</div>
+            <div class="symbol symbol_bottom" role="img" aria-label="Comet" data-symbol="COMET">☄</div>
           </div>
           <div class="reel" data-reel="3" role="group" aria-label="Reel 4">
-            <div class="symbol symbol--top" role="img" aria-label="Comet" data-symbol="COMET">☄</div>
-            <div class="symbol symbol--center" role="img" aria-label="Gem" data-symbol="GEM">◆</div>
-            <div class="symbol symbol--bottom" role="img" aria-label="Bar" data-symbol="BAR">▰</div>
+            <div class="symbol symbol_top" role="img" aria-label="Comet" data-symbol="COMET">☄</div>
+            <div class="symbol symbol_center" role="img" aria-label="Gem" data-symbol="GEM">◆</div>
+            <div class="symbol symbol_bottom" role="img" aria-label="Bar" data-symbol="BAR">▰</div>
           </div>
           <div class="reel" data-reel="4" role="group" aria-label="Reel 5">
-            <div class="symbol symbol--top" role="img" aria-label="Bar" data-symbol="BAR">▰</div>
-            <div class="symbol symbol--center" role="img" aria-label="Star" data-symbol="STAR">★</div>
-            <div class="symbol symbol--bottom" role="img" aria-label="Seven" data-symbol="7">7</div>
+            <div class="symbol symbol_top" role="img" aria-label="Bar" data-symbol="BAR">▰</div>
+            <div class="symbol symbol_center" role="img" aria-label="Star" data-symbol="STAR">★</div>
+            <div class="symbol symbol_bottom" role="img" aria-label="Seven" data-symbol="7">7</div>
           </div>
         </div>
 
@@ -71,42 +71,46 @@
         <!-- Spin Controls -->
         <form class="controls" id="controls">
           <label for="bet">Bet</label>
-          <div class="bet-control">
-            <button class="icon-button" type="button" id="decrease-bet" aria-label="Decrease bet">-</button>
+          <div class="bet_control">
+            <button class="icon_button" type="button" id="decrease_bet" aria-label="Decrease bet">-</button>
             <input id="bet" name="bet" type="number" min="1" max="10" step="1" value="5">
-            <button class="icon-button" type="button" id="increase-bet" aria-label="Increase bet">+</button>
+            <button class="icon_button" type="button" id="increase_bet" aria-label="Increase bet">+</button>
           </div>
-          <button class="spin-button" id="spin-button" type="submit">
+          <button class="spin_button" id="spin_button" type="submit">
             <span aria-hidden="true">&gt;</span>
             Spin
+          </button>
+          <button class="auto_spin_button" id="auto_spin_button" type="button">
+            <span aria-hidden="true">&gt;&gt;</span>
+            Auto 5
           </button>
         </form>
       </section>
 
 
       <!-- Pay Table -->
-      <section class="paytable-tab" aria-labelledby="paytable-title">
+      <section class="paytable_tab" aria-labelledby="paytable_title">
         <button
-          class="paytable-tab__button"
-          id="paytable-toggle"
+          class="paytable_tab_button"
+          id="paytable_toggle"
           type="button"
           aria-expanded="false"
-          aria-controls="paytable-panel"
+          aria-controls="paytable_panel"
         >
-          <span id="paytable-title">Pay Table</span>
-          <span class="paytable-tab__icon" aria-hidden="true">+</span>
+          <span id="paytable_title">Pay Table</span>
+          <span class="paytable_tab_icon" aria-hidden="true">+</span>
         </button>
-        <div class="paytable-tab__panel" id="paytable-panel" hidden>
-          <div class="paytable-rules">
+        <div class="paytable_tab_panel" id="paytable_panel" hidden>
+          <div class="paytable_rules">
             <p>Wins are checked left to right across adjacent reels on the 3-by-5 grid.</p>
-            <p>Three, four, or five matching symbols pay when each step stays level or moves one row up/down. Wins may start on any reel.</p>
+            <p>Four or five matching symbols pay when each step stays level or moves one row up/down. Wins may start on any reel.</p>
           </div>
 
           <h2>Path Rules</h2>
-          <div id="payline-list" class="payline-list"></div>
+          <div id="payline_list" class="payline_list"></div>
 
           <h2>Symbol Payouts</h2>
-          <div id="paytable-list" class="paytable__list"></div>
+          <div id="paytable_list" class="paytable_list"></div>
         </div>
       </section>
 

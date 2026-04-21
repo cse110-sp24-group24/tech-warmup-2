@@ -4,19 +4,19 @@ export const CENTER_ROW_INDEX = 1;
 export const INITIAL_BALANCE = 100;
 export const MIN_BET = 1;
 export const MAX_BET = 10;
-export const BIG_WIN_MULTIPLIER = 20;
+export const BIG_WIN_MULTIPLIER = 12;
 
 export const SYMBOLS = Object.freeze(["7", "BAR", "GEM", "STAR", "ORB", "COMET"]);
 
 export const LEGAL_PATHS = Object.freeze(createLegalWinPaths());
 
 const BASE_MULTIPLIERS = Object.freeze({
-  "7": 10,
-  BAR: 8,
-  GEM: 6,
-  STAR: 5,
-  ORB: 4,
-  COMET: 3
+  "7": 6,
+  BAR: 5,
+  GEM: 4,
+  STAR: 3,
+  ORB: 2,
+  COMET: 2
 });
 
 /**
@@ -28,8 +28,8 @@ export function createPaytable() {
   const paytable = new Map();
 
   SYMBOLS.forEach((symbol) => {
-    [3, 4, 5].forEach((count) => {
-      const multiplier = BASE_MULTIPLIERS[symbol] * (count - 2);
+    [4, 5].forEach((count) => {
+      const multiplier = BASE_MULTIPLIERS[symbol] * (count - 3);
       paytable.set(`${symbol}:${count}`, {
         symbol,
         count,
@@ -114,8 +114,8 @@ export function getCenterPayline(reels) {
  * @returns {{ key: string | null, multiplier: number, matchedCount: number, matchedSymbol: string | null, label: string }}
  */
 export function evaluatePayline(payline, paytable = PAYTABLE) {
-  if (!Array.isArray(payline) || payline.length < 3 || payline.length > REEL_COUNT) {
-    throw new RangeError("Payline must contain three, four, or five symbols.");
+  if (!Array.isArray(payline) || payline.length < 4 || payline.length > REEL_COUNT) {
+    throw new RangeError("Payline must contain four or five symbols.");
   }
 
   const [firstSymbol] = payline;
@@ -180,11 +180,16 @@ export function evaluateReels(reels, legalPaths = LEGAL_PATHS, paytable = PAYTAB
 /**
  * Resolves a 3-by-5 spin after deducting the bet immediately.
  *
- * @param {{ balance: number, bet: number, reels?: string[][], randomInteger?: (maxExclusive: number) => number }} options
+ * @param {{ balance?: number, bet?: number, reels?: string[][], randomInteger?: (maxExclusive: number) => number }} [options]
  * @returns {{ balance: number, bet: number, reels: string[][], wins: ReturnType<typeof evaluateReels>["wins"], totalMultiplier: number, payout: number, gameOver: boolean }}
  */
-export function spin(options) {
-  const { balance, bet, reels = generateSpinResult(options.randomInteger) } = options;
+export function spin(options = {}) {
+  const {
+    balance = INITIAL_BALANCE,
+    bet = MIN_BET,
+    randomInteger,
+    reels = generateSpinResult(randomInteger)
+  } = options;
   validateBet(bet, balance);
 
   const balanceAfterBet = Math.max(0, balance - bet);
@@ -312,7 +317,7 @@ function isCellRunContained(shorter, longer) {
 }
 
 /**
- * Builds every legal 3, 4, and 5-reel win path. Each path may begin on any
+ * Builds every legal 4 and 5-reel win path. Each path may begin on any
  * reel and neighboring reels stay on the same row or move one row up/down.
  *
  * @returns {Array<{ startReel: number, rows: readonly number[] }>}
@@ -320,7 +325,7 @@ function isCellRunContained(shorter, longer) {
 function createLegalWinPaths() {
   const paths = [];
 
-  for (let length = 3; length <= REEL_COUNT; length += 1) {
+  for (let length = 4; length <= REEL_COUNT; length += 1) {
     for (let startReel = 0; startReel <= REEL_COUNT - length; startReel += 1) {
       for (let startRow = 0; startRow < ROW_COUNT; startRow += 1) {
         extendPath(startReel, length, [startRow]);
