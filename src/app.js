@@ -4,6 +4,7 @@ import {
   MAX_BET,
   MIN_BET,
   PAYTABLE,
+  PAYLINES,
   spin
 } from "./gameLogic.js";
 import { RetroSpaceBackground } from "./spaceBackground.js";
@@ -17,7 +18,10 @@ const elements = {
   controls: document.querySelector("#controls"),
   decreaseBet: document.querySelector("#decrease-bet"),
   increaseBet: document.querySelector("#increase-bet"),
+  paylineList: document.querySelector("#payline-list"),
   paytableList: document.querySelector("#paytable-list"),
+  paytablePanel: document.querySelector("#paytable-panel"),
+  paytableToggle: document.querySelector("#paytable-toggle"),
   reels: Array.from(document.querySelectorAll(".reel")),
   spinButton: document.querySelector("#spin-button"),
   status: document.querySelector("#status")
@@ -33,6 +37,7 @@ const state = {
 };
 
 renderPaytable();
+renderPaylines();
 renderBalance();
 updateBetBounds();
 background.start();
@@ -41,6 +46,7 @@ elements.controls.addEventListener("submit", handleSpin);
 elements.decreaseBet.addEventListener("click", () => adjustBet(-1));
 elements.increaseBet.addEventListener("click", () => adjustBet(1));
 elements.bet.addEventListener("input", updateBetBounds);
+elements.paytableToggle.addEventListener("click", togglePaytable);
 
 /**
  * Handles one complete spin, with the result computed before animation starts.
@@ -125,8 +131,9 @@ function announceOutcome(outcome) {
     return;
   }
 
-  const isBigWin = outcome.win.multiplier >= BIG_WIN_MULTIPLIER;
+  const isBigWin = outcome.totalMultiplier >= BIG_WIN_MULTIPLIER;
   const statusType = isBigWin ? "big" : "win";
+  const paylineText = outcome.wins.length === 1 ? "1 payline" : `${outcome.wins.length} paylines`;
 
   if (isBigWin) {
     background.triggerWarp();
@@ -135,7 +142,7 @@ function announceOutcome(outcome) {
     audio.playWin();
   }
 
-  setStatus(`${outcome.win.label} pays ${outcome.payout} tokens.`, statusType);
+  setStatus(`${paylineText} pays ${outcome.payout} tokens.`, statusType);
 }
 
 /**
@@ -159,6 +166,37 @@ function renderPaytable() {
     });
 
   elements.paytableList.replaceChildren(...rows);
+}
+
+/**
+ * @returns {void}
+ */
+function renderPaylines() {
+  const rows = PAYLINES.map((payline, index) => {
+    const row = document.createElement("div");
+    row.className = "payline-row";
+
+    const name = document.createElement("span");
+    name.textContent = `${index + 1}. ${payline.name}`;
+
+    const pattern = document.createElement("strong");
+    pattern.textContent = payline.rows.map((rowIndex) => rowIndex + 1).join("-");
+
+    row.append(name, pattern);
+    return row;
+  });
+
+  elements.paylineList.replaceChildren(...rows);
+}
+
+/**
+ * @returns {void}
+ */
+function togglePaytable() {
+  const expanded = elements.paytableToggle.getAttribute("aria-expanded") === "true";
+  elements.paytableToggle.setAttribute("aria-expanded", String(!expanded));
+  elements.paytablePanel.hidden = expanded;
+  elements.paytableToggle.querySelector(".paytable-tab__icon").textContent = expanded ? "+" : "-";
 }
 
 /**

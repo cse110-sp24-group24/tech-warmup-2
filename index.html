@@ -55,7 +55,11 @@
           </div>
         </div>
 
-        <div class="payline" aria-hidden="true"></div>
+        <div class="payline-guide" aria-hidden="true">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
 
         <form class="controls" id="controls">
           <label for="bet">Bet</label>
@@ -71,11 +75,28 @@
         </form>
       </section>
 
-      <aside class="paytable" aria-labelledby="paytable-title">
-        <h2 id="paytable-title">Paytable</h2>
-        <p class="paytable__note">Center row only. Matches pay left to right.</p>
-        <div id="paytable-list" class="paytable__list"></div>
-      </aside>
+      <section class="paytable-tab" aria-labelledby="paytable-title">
+        <button
+          class="paytable-tab__button"
+          id="paytable-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="paytable-panel"
+        >
+          <span id="paytable-title">Pay Table</span>
+          <span class="paytable-tab__icon" aria-hidden="true">+</span>
+        </button>
+        <div class="paytable-tab__panel" id="paytable-panel" hidden>
+          <div class="paytable-rules">
+            <p>Wins are checked left to right on nine active paylines across the 3-by-5 grid.</p>
+            <p>Three, four, or five matching symbols pay. Multiple paylines can win on the same spin.</p>
+          </div>
+          <h2>Paylines</h2>
+          <div id="payline-list" class="payline-list"></div>
+          <h2>Symbol Payouts</h2>
+          <div id="paytable-list" class="paytable__list"></div>
+        </div>
+      </section>
     </main>
 
     <script type="module" src="src/app.js"></script>

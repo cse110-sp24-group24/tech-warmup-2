@@ -37,24 +37,37 @@ Your code must be:
 - Each spin requires a bet amount
   - Must have defined minimum and maximum bet
 - Bet is deducted immediately on spin
-- A win occurs when symbols match a valid payline combination
-- Payout = bet × multiplier from paytable
+- A win occurs when symbols match on one or more valid 3-by-5 slot paylines
+- Payout = bet × combined multiplier from all winning paylines
 - No match → player loses bet
 - Game ends when balance < minimum bet
-- Paytable must always be visible to player
+- A clean "Pay Table" tab must be visible below the slot machine
+  - Opening the tab shows rules, active paylines, and symbol payouts
 
 ---
 
 ## Game Logic
 
 - Exactly 5 independent reels
+- Exactly 3 visible rows per reel
 - Each reel uses a true RNG (Random Number Generator)
   - Outcomes must be independent across reels and spins
 - Spin result must be determined before animation plays
   - UI only displays precomputed result
 - Use a structured Paytable object (Map / Dictionary)
   - Do NOT use long if/else chains
-- Only evaluate the center horizontal row (single payline)
+- Evaluate multiple traditional 3-by-5 paylines, left to right
+  - Top row
+  - Middle row
+  - Bottom row
+  - Diagonal down
+  - Diagonal up
+  - V shape
+  - Inverted V shape
+  - Upper zigzag
+  - Lower zigzag
+- A payline wins when 3, 4, or 5 matching symbols appear consecutively from the left
+- Multiple winning paylines may pay on the same spin
 - Prevent balance from going below zero
 
 ---

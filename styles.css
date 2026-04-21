@@ -67,18 +67,18 @@ input {
 }
 
 .game-shell {
-  width: min(1180px, calc(100% - 32px));
+  width: min(920px, calc(100% - 32px));
   min-height: 100vh;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
   align-items: center;
   padding: 28px 0;
 }
 
 .machine,
-.paytable {
+.paytable-tab {
   border: 2px solid var(--border);
   border-radius: 8px;
   background: var(--panel);
@@ -228,15 +228,34 @@ h2 {
   opacity: 0.7;
 }
 
-.payline {
+.payline-guide {
   position: absolute;
   left: clamp(36px, 5vw, 52px);
   right: clamp(36px, 5vw, 52px);
-  top: 54%;
-  height: 3px;
-  background: linear-gradient(90deg, transparent, var(--magenta), var(--cyan), transparent);
-  box-shadow: 0 0 14px var(--cyan);
+  top: 39%;
+  bottom: 31%;
   pointer-events: none;
+}
+
+.payline-guide span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 61, 242, 0.58), rgba(47, 248, 255, 0.58), transparent);
+  box-shadow: 0 0 10px rgba(47, 248, 255, 0.54);
+}
+
+.payline-guide span:nth-child(1) {
+  top: 0;
+}
+
+.payline-guide span:nth-child(2) {
+  top: 50%;
+}
+
+.payline-guide span:nth-child(3) {
+  bottom: 0;
 }
 
 .controls {
@@ -300,17 +319,80 @@ input {
   text-transform: uppercase;
 }
 
-.paytable {
-  padding: 20px;
+.paytable-tab {
+  overflow: hidden;
+}
+
+.paytable-tab__button {
+  width: 100%;
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 0 18px;
+  border: 0;
+  color: var(--cyan);
+  background: rgba(3, 5, 18, 0.78);
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.paytable-tab__button:hover {
+  color: var(--ink);
+  box-shadow: inset 0 0 18px rgba(47, 248, 255, 0.24);
+}
+
+.paytable-tab__button span:first-child {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.paytable-tab__icon {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(47, 248, 255, 0.58);
+  border-radius: 4px;
+  color: var(--amber);
+}
+
+.paytable-tab__panel {
+  padding: 18px;
+  border-top: 1px solid rgba(116, 232, 255, 0.24);
+}
+
+.paytable-tab__panel[hidden] {
+  display: none;
+}
+
+.paytable-rules {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 16px;
+  color: var(--muted);
+}
+
+.paytable-rules p {
+  margin: 0;
+}
+
+.paytable-tab h2 {
+  margin-top: 18px;
+  font-size: 1rem;
+  color: var(--ink);
 }
 
 .paytable__list {
   display: grid;
   gap: 10px;
-  margin-top: 18px;
+  margin-top: 10px;
 }
 
-.paytable-row {
+.paytable-row,
+.payline-row {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 12px;
@@ -321,11 +403,19 @@ input {
   background: rgba(3, 5, 18, 0.64);
 }
 
-.paytable-row span {
+.payline-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.paytable-row span,
+.payline-row span {
   min-width: 0;
 }
 
-.paytable-row strong {
+.paytable-row strong,
+.payline-row strong {
   color: var(--amber);
 }
 

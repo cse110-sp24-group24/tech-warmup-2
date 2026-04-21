@@ -5,11 +5,14 @@ import {
   MAX_BET,
   MIN_BET,
   PAYTABLE,
+  PAYLINES,
   REEL_COUNT,
   ROW_COUNT,
   evaluatePayline,
+  evaluateReels,
   generateSpinResult,
   getCenterPayline,
+  getPayline,
   spin,
   validateBet
 } from "../src/gameLogic.js";
@@ -26,7 +29,19 @@ test("generateSpinResult creates exactly five independent reels with three rows"
   result.forEach((reel) => assert.equal(reel.length, ROW_COUNT));
 });
 
-test("getCenterPayline evaluates only the center horizontal row", () => {
+test("getPayline extracts any configured row pattern from the 3-by-5 grid", () => {
+  const reels = [
+    ["7", "BAR", "GEM"],
+    ["STAR", "BAR", "ORB"],
+    ["COMET", "BAR", "7"],
+    ["GEM", "BAR", "STAR"],
+    ["ORB", "BAR", "COMET"]
+  ];
+
+  assert.deepEqual(getPayline(reels, [0, 1, 2, 1, 0]), ["7", "BAR", "7", "BAR", "ORB"]);
+});
+
+test("getCenterPayline still extracts the middle horizontal row", () => {
   const reels = [
     ["7", "BAR", "7"],
     ["7", "BAR", "STAR"],
@@ -54,7 +69,21 @@ test("evaluatePayline returns no match for fewer than three center matches", () 
   assert.equal(win.key, null);
 });
 
-test("spin deducts bet immediately and adds payout from multiplier", () => {
+test("evaluateReels totals multiple winning paylines", () => {
+  const reels = [
+    ["7", "BAR", "COMET"],
+    ["7", "BAR", "STAR"],
+    ["7", "BAR", "ORB"],
+    ["GEM", "BAR", "7"],
+    ["ORB", "BAR", "GEM"]
+  ];
+  const evaluation = evaluateReels(reels);
+
+  assert.equal(evaluation.wins.length, 2);
+  assert.equal(evaluation.totalMultiplier, PAYTABLE.get("7:3").multiplier + PAYTABLE.get("BAR:5").multiplier);
+});
+
+test("spin deducts bet immediately and adds combined payline payout", () => {
   const reels = [
     ["STAR", "7", "ORB"],
     ["COMET", "7", "BAR"],
@@ -83,6 +112,11 @@ test("spin prevents balance from going below zero", () => {
 
   assert.equal(outcome.balance, 0);
   assert.equal(outcome.gameOver, true);
+});
+
+test("traditional rules define nine active paylines", () => {
+  assert.equal(PAYLINES.length, 9);
+  PAYLINES.forEach((payline) => assert.equal(payline.rows.length, REEL_COUNT));
 });
 
 test("validateBet enforces minimum, maximum, integer, and balance rules", () => {

@@ -8,6 +8,18 @@ export const BIG_WIN_MULTIPLIER = 20;
 
 export const SYMBOLS = Object.freeze(["7", "BAR", "GEM", "STAR", "ORB", "COMET"]);
 
+export const PAYLINES = Object.freeze([
+  Object.freeze({ name: "Top Row", rows: Object.freeze([0, 0, 0, 0, 0]) }),
+  Object.freeze({ name: "Middle Row", rows: Object.freeze([1, 1, 1, 1, 1]) }),
+  Object.freeze({ name: "Bottom Row", rows: Object.freeze([2, 2, 2, 2, 2]) }),
+  Object.freeze({ name: "Diagonal Down", rows: Object.freeze([0, 0, 1, 2, 2]) }),
+  Object.freeze({ name: "Diagonal Up", rows: Object.freeze([2, 2, 1, 0, 0]) }),
+  Object.freeze({ name: "V Shape", rows: Object.freeze([0, 1, 2, 1, 0]) }),
+  Object.freeze({ name: "Inverted V", rows: Object.freeze([2, 1, 0, 1, 2]) }),
+  Object.freeze({ name: "Upper Zigzag", rows: Object.freeze([1, 0, 0, 0, 1]) }),
+  Object.freeze({ name: "Lower Zigzag", rows: Object.freeze([1, 2, 2, 2, 1]) })
+]);
+
 const BASE_MULTIPLIERS = Object.freeze({
   "7": 10,
   BAR: 8,
@@ -82,20 +94,32 @@ export function generateSpinResult(randomInteger = getRandomInteger) {
 }
 
 /**
- * Extracts the single center payline from visible reels.
+ * Extracts one payline from visible reels.
+ *
+ * @param {string[][]} reels Current visible reel symbols.
+ * @param {number[]} rowPattern Row index for each reel.
+ * @returns {string[]}
+ */
+export function getPayline(reels, rowPattern) {
+  validateReels(reels);
+  validateRowPattern(rowPattern);
+  return reels.map((reel, reelIndex) => reel[rowPattern[reelIndex]]);
+}
+
+/**
+ * Extracts the center horizontal payline from visible reels.
  *
  * @param {string[][]} reels Current visible reel symbols.
  * @returns {string[]}
  */
 export function getCenterPayline(reels) {
-  validateReels(reels);
-  return reels.map((reel) => reel[CENTER_ROW_INDEX]);
+  return getPayline(reels, PAYLINES[1].rows);
 }
 
 /**
- * Evaluates left-to-right matches on the center row using the paytable.
+ * Evaluates left-to-right matches on one payline using the paytable.
  *
- * @param {string[]} payline Five center-row symbols.
+ * @param {string[]} payline Five payline symbols.
  * @param {Map<string, { multiplier: number, label: string }>} paytable Paytable lookup.
  * @returns {{ key: string | null, multiplier: number, matchedCount: number, matchedSymbol: string | null, label: string }}
  */
@@ -120,27 +144,54 @@ export function evaluatePayline(payline, paytable = PAYTABLE) {
 }
 
 /**
- * Resolves a spin after deducting the bet immediately.
+ * Evaluates every active payline and totals the multipliers.
+ *
+ * @param {string[][]} reels Current visible reel symbols.
+ * @param {ReadonlyArray<{ name: string, rows: readonly number[] }>} paylines Payline definitions.
+ * @param {Map<string, { multiplier: number, label: string }>} paytable Paytable lookup.
+ * @returns {{ wins: Array<ReturnType<typeof evaluatePayline> & { paylineName: string, payline: string[] }>, totalMultiplier: number }}
+ */
+export function evaluateReels(reels, paylines = PAYLINES, paytable = PAYTABLE) {
+  validateReels(reels);
+
+  const wins = paylines
+    .map((paylineDefinition) => {
+      const payline = getPayline(reels, paylineDefinition.rows);
+      return {
+        ...evaluatePayline(payline, paytable),
+        paylineName: paylineDefinition.name,
+        payline
+      };
+    })
+    .filter((result) => result.multiplier > 0);
+
+  return {
+    wins,
+    totalMultiplier: wins.reduce((total, win) => total + win.multiplier, 0)
+  };
+}
+
+/**
+ * Resolves a 3-by-5 spin after deducting the bet immediately.
  *
  * @param {{ balance: number, bet: number, reels?: string[][], randomInteger?: (maxExclusive: number) => number }} options
- * @returns {{ balance: number, bet: number, reels: string[][], payline: string[], win: ReturnType<typeof evaluatePayline>, payout: number, gameOver: boolean }}
+ * @returns {{ balance: number, bet: number, reels: string[][], wins: ReturnType<typeof evaluateReels>["wins"], totalMultiplier: number, payout: number, gameOver: boolean }}
  */
 export function spin(options) {
   const { balance, bet, reels = generateSpinResult(options.randomInteger) } = options;
   validateBet(bet, balance);
 
   const balanceAfterBet = Math.max(0, balance - bet);
-  const payline = getCenterPayline(reels);
-  const win = evaluatePayline(payline);
-  const payout = bet * win.multiplier;
+  const evaluation = evaluateReels(reels);
+  const payout = bet * evaluation.totalMultiplier;
   const nextBalance = balanceAfterBet + payout;
 
   return {
     balance: nextBalance,
     bet,
     reels,
-    payline,
-    win,
+    wins: evaluation.wins,
+    totalMultiplier: evaluation.totalMultiplier,
     payout,
     gameOver: nextBalance < MIN_BET
   };
@@ -181,6 +232,24 @@ function validateReels(reels) {
   reels.forEach((reel) => {
     if (!Array.isArray(reel) || reel.length !== ROW_COUNT) {
       throw new RangeError("Each reel must contain exactly three visible rows.");
+    }
+  });
+}
+
+/**
+ * Ensures a payline row pattern covers all reels and valid rows.
+ *
+ * @param {readonly number[]} rowPattern Row index for each reel.
+ * @returns {void}
+ */
+function validateRowPattern(rowPattern) {
+  if (!Array.isArray(rowPattern) || rowPattern.length !== REEL_COUNT) {
+    throw new RangeError("A payline must define one row for each reel.");
+  }
+
+  rowPattern.forEach((rowIndex) => {
+    if (!Number.isInteger(rowIndex) || rowIndex < 0 || rowIndex >= ROW_COUNT) {
+      throw new RangeError("Payline rows must be valid visible row indexes.");
     }
   });
 }
