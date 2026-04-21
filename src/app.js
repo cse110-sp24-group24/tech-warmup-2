@@ -1,6 +1,7 @@
 import {
   BIG_WIN_MULTIPLIER,
   INITIAL_BALANCE,
+  MAX_BET,
   MIN_BET,
   PAYTABLE,
   spin
@@ -54,6 +55,9 @@ const elements = {
   rewardContinueButton: document.querySelector("#reward_continue_button"),
   rewardModal: document.querySelector("#reward_modal"),
   shopItems: document.querySelector("#shop_items"),
+  shopModal: document.querySelector("#shop_modal"),
+  shopModalClose: document.querySelector("#shop_modal_close"),
+  shopToggle: document.querySelector("#shop_toggle"),
   spinButton: document.querySelector("#spin_button"),
   status: document.querySelector("#status")
 };
@@ -84,6 +88,18 @@ elements.increaseBet.addEventListener("click", () => adjustBet(1));
 elements.bet.addEventListener("input", updateBetBounds);
 elements.paytableToggle.addEventListener("click", togglePaytable);
 elements.rewardContinueButton.addEventListener("click", closeRewardModal);
+elements.shopToggle.addEventListener("click", openShopModal);
+elements.shopModalClose.addEventListener("click", closeShopModal);
+elements.shopModal.addEventListener("click", (event) => {
+  if (event.target === elements.shopModal) {
+    closeShopModal();
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !elements.shopModal.hidden) {
+    closeShopModal();
+  }
+});
 
 /**
  * Handles one complete spin, with the result computed before animation starts.
@@ -94,7 +110,7 @@ elements.rewardContinueButton.addEventListener("click", closeRewardModal);
 async function handleSpin(event) {
   event.preventDefault();
 
-  if (state.spinning || state.autoSpinning) {
+  if (state.spinning || state.autoSpinning || state.chestOpen) {
     return;
   }
 
@@ -107,7 +123,7 @@ async function handleSpin(event) {
  * @returns {Promise<void>}
  */
 async function handleAutoSpin() {
-  if (state.spinning || state.autoSpinning) {
+  if (state.spinning || state.autoSpinning || state.chestOpen) {
     return;
   }
 
@@ -118,6 +134,10 @@ async function handleAutoSpin() {
   try {
     let completedSpins = 0;
     while (completedSpins < AUTO_SPIN_COUNT && state.balance >= autoSpinBet) {
+      if (state.chestOpen) {
+        break;
+      }
+
       const outcome = await runSpin({ bet: autoSpinBet, restoreControls: false });
 
       if (!outcome) {
@@ -126,11 +146,11 @@ async function handleAutoSpin() {
 
       completedSpins += 1;
 
-      if (state.balance < MIN_BET) {
+      if (state.chestOpen || state.balance < MIN_BET) {
         break;
       }
 
-      if (outcome?.payout > 0) {
+      if (outcome.payout > 0 && !state.chestOpen) {
         await delay(AUTO_SPIN_WIN_PAUSE_MS);
       }
     }
@@ -140,6 +160,50 @@ async function handleAutoSpin() {
     updateBetBounds();
     setControlsEnabled(state.balance >= MIN_BET && !state.chestOpen);
   }
+}
+
+/**
+ * Clamps a requested bet to legal integer bounds for the current balance.
+ *
+ * @param {number} rawBet Requested bet (may be from input or auto-spin).
+ * @param {number} balance Balance before the spin.
+ * @returns {number}
+ */
+function resolveSpinBet(rawBet, balance) {
+  const affordableMax = Math.min(MAX_BET, balance);
+  const upper = Math.max(MIN_BET, affordableMax);
+  const parsed = Number.isInteger(rawBet) ? rawBet : Math.trunc(Number(rawBet));
+  if (!Number.isFinite(parsed)) {
+    throw new RangeError("Bet must be a whole number.");
+  }
+
+  return clamp(parsed, MIN_BET, upper);
+}
+
+/**
+ * Opens the shop modal when gameplay allows it.
+ *
+ * @returns {void}
+ */
+function openShopModal() {
+  if (state.chestOpen || state.spinning || state.autoSpinning) {
+    return;
+  }
+
+  elements.shopModal.hidden = false;
+  document.body.style.overflow = "hidden";
+  renderShop();
+  elements.shopModalClose.focus();
+}
+
+/**
+ * Closes the shop modal and restores page scroll.
+ *
+ * @returns {void}
+ */
+function closeShopModal() {
+  elements.shopModal.hidden = true;
+  document.body.style.overflow = "";
 }
 
 /**
@@ -154,16 +218,22 @@ async function runSpin({ bet = getSanitizedBet(), restoreControls = true } = {})
   }
 
   const startingBalance = state.balance;
+  /** @type {ReturnType<typeof spin> | undefined} */
   let outcome;
+  /** Set once spin() and boost math succeed; used to distinguish rollback from a settled loss. */
+  let ledgerOutcome = null;
 
   state.spinning = true;
   setControlsEnabled(false);
 
   try {
-    outcome = spin({ balance: startingBalance, bet });
+    const resolvedBet = resolveSpinBet(bet, startingBalance);
+    outcome = spin({ balance: startingBalance, bet: resolvedBet });
+    ledgerOutcome = outcome;
     outcome = applyBoostToOutcome(outcome);
+    ledgerOutcome = outcome;
     clearWinningCells();
-    setTemporaryBalance(Math.max(0, startingBalance - bet));
+    setTemporaryBalance(Math.max(0, startingBalance - resolvedBet));
     setStatus("Spinning...", "ready");
 
     await animateReels(outcome.reels);
@@ -174,7 +244,7 @@ async function runSpin({ bet = getSanitizedBet(), restoreControls = true } = {})
     consumeBoostSpin();
     return outcome;
   } catch (error) {
-    state.balance = outcome?.balance ?? startingBalance;
+    state.balance = ledgerOutcome !== null ? ledgerOutcome.balance : startingBalance;
     setStatus(error.message, "loss");
     return outcome;
   } finally {
@@ -264,7 +334,7 @@ function highlightWinningCells(wins) {
 function announceOutcome(outcome) {
   if (outcome.payout === 0) {
     audio.playLoss();
-    setStatus(`No match. Lost ${outcome.bet} tokens.`, outcome.gameOver ? "loss" : "loss");
+    setStatus(`No match. Lost ${outcome.bet} tokens.`, "loss");
     return;
   }
 
@@ -399,7 +469,12 @@ function renderShop() {
     button.className = "shop_buy_button";
     button.type = "button";
     button.textContent = "Buy";
-    button.disabled = state.balance < item.cost || Boolean(state.boost) || state.spinning || state.autoSpinning;
+    button.disabled =
+      state.balance < item.cost ||
+      Boolean(state.boost) ||
+      state.spinning ||
+      state.autoSpinning ||
+      state.chestOpen;
     button.addEventListener("click", () => buyBoost(item));
 
     row.append(copy, button);
@@ -414,7 +489,7 @@ function renderShop() {
  * @returns {void}
  */
 function buyBoost(item) {
-  if (state.balance < item.cost || state.boost || state.spinning || state.autoSpinning) {
+  if (state.balance < item.cost || state.boost || state.spinning || state.autoSpinning || state.chestOpen) {
     return;
   }
 
@@ -452,6 +527,7 @@ function renderBoostIndicator() {
  * @returns {void}
  */
 function openChestModal() {
+  closeShopModal();
   state.chestOpen = true;
   setControlsEnabled(false);
   elements.chestModal.hidden = false;
@@ -541,7 +617,8 @@ function setStatus(message, type) {
  */
 function adjustBet(delta) {
   const currentBet = getSanitizedBet();
-  elements.bet.value = String(clamp(currentBet + delta, MIN_BET, getCurrentMaxBet()));
+  const maxBet = getCurrentMaxBet();
+  elements.bet.value = String(clamp(currentBet + delta, MIN_BET, maxBet));
   updateBetBounds();
 }
 
@@ -549,8 +626,10 @@ function adjustBet(delta) {
  * @returns {number}
  */
 function getSanitizedBet() {
+  const maxBet = getCurrentMaxBet();
   const parsedBet = Number.parseInt(elements.bet.value, 10);
-  return clamp(Number.isNaN(parsedBet) ? MIN_BET : parsedBet, MIN_BET, getCurrentMaxBet());
+  const base = Number.isNaN(parsedBet) ? MIN_BET : parsedBet;
+  return clamp(base, MIN_BET, maxBet);
 }
 
 /**
@@ -561,12 +640,12 @@ function updateBetBounds() {
   const controlsDisabled = state.spinning || !state.controlsEnabled;
   const typedBet = Number.parseInt(elements.bet.value, 10);
 
-  elements.bet.min = "0";
-  elements.bet.max = String(maxBet);
-  if (elements.bet.value !== "" && !Number.isNaN(typedBet) && typedBet > maxBet) {
-    elements.bet.value = String(maxBet);
+  elements.bet.min = String(MIN_BET);
+  elements.bet.max = String(Math.max(MIN_BET, maxBet));
+  if (elements.bet.value !== "" && !Number.isNaN(typedBet)) {
+    elements.bet.value = String(clamp(typedBet, MIN_BET, maxBet));
   }
-  elements.decreaseBet.disabled = controlsDisabled || getDisplayedBet() <= 0;
+  elements.decreaseBet.disabled = controlsDisabled || getDisplayedBet() <= MIN_BET;
   elements.increaseBet.disabled = controlsDisabled || getDisplayedBet() >= maxBet;
 }
 
@@ -574,7 +653,7 @@ function updateBetBounds() {
  * @returns {number}
  */
 function getCurrentMaxBet() {
-  return Math.max(MIN_BET, state.balance);
+  return Math.min(MAX_BET, Math.max(MIN_BET, state.balance));
 }
 
 /**
@@ -583,9 +662,11 @@ function getCurrentMaxBet() {
  */
 function setControlsEnabled(enabled) {
   state.controlsEnabled = enabled;
+  const shopLocked = state.chestOpen;
   elements.autoSpinButton.disabled = !enabled;
   elements.spinButton.disabled = !enabled;
   elements.bet.disabled = !enabled;
+  elements.shopToggle.disabled = !enabled || shopLocked;
   updateBetBounds();
   renderShop();
 }
@@ -643,7 +724,11 @@ function launchLightningBolt() {
  */
 function getDisplayedBet() {
   const parsedBet = Number.parseInt(elements.bet.value, 10);
-  return Number.isNaN(parsedBet) ? 0 : parsedBet;
+  if (Number.isNaN(parsedBet)) {
+    return MIN_BET;
+  }
+
+  return clamp(parsedBet, MIN_BET, getCurrentMaxBet());
 }
 
 /**
