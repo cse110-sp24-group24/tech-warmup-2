@@ -78,8 +78,8 @@ test("evaluateReels totals multiple winning paylines", () => {
     ["ORB", "BAR", "GEM"]
   ];
   const evaluation = evaluateReels(reels, [
-    [0, 0, 0, 0, 0],
-    [1, 1, 1, 1, 1]
+    { startReel: 0, rows: [0, 0, 0] },
+    { startReel: 0, rows: [1, 1, 1, 1, 1] }
   ]);
 
   assert.equal(evaluation.wins.length, 2);
@@ -94,7 +94,7 @@ test("evaluateReels pays same-symbol paths across adjacent rows without requirin
     ["GEM", "COMET", "STAR"],
     ["ORB", "STAR", "7"]
   ];
-  const evaluation = evaluateReels(reels, [[0, 1, 2, 2, 1]]);
+  const evaluation = evaluateReels(reels, [{ startReel: 0, rows: [0, 1, 2, 2, 1] }]);
 
   assert.equal(evaluation.wins.length, 1);
   assert.equal(evaluation.wins[0].matchedSymbol, "STAR");
@@ -116,12 +116,31 @@ test("evaluateReels ignores shorter prefix wins when the same path reaches farth
     ["STAR", "GEM", "7"]
   ];
   const evaluation = evaluateReels(reels, [
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 1, 1]
+    { startReel: 0, rows: [0, 0, 0, 0, 0] },
+    { startReel: 0, rows: [0, 0, 0, 1, 1] }
   ]);
 
   assert.equal(evaluation.wins.length, 1);
   assert.equal(evaluation.wins[0].matchedCount, 5);
+});
+
+test("evaluateReels allows winning combinations to start from any reel", () => {
+  const reels = [
+    ["7", "GEM", "COMET"],
+    ["STAR", "7", "COMET"],
+    ["ORB", "STAR", "GEM"],
+    ["BAR", "STAR", "COMET"],
+    ["GEM", "7", "STAR"]
+  ];
+  const evaluation = evaluateReels(reels, [{ startReel: 2, rows: [1, 1, 2] }]);
+
+  assert.equal(evaluation.wins.length, 1);
+  assert.equal(evaluation.wins[0].matchedSymbol, "STAR");
+  assert.deepEqual(evaluation.wins[0].cells, [
+    { reelIndex: 2, rowIndex: 1 },
+    { reelIndex: 3, rowIndex: 1 },
+    { reelIndex: 4, rowIndex: 2 }
+  ]);
 });
 
 test("spin deducts bet immediately and adds combined payline payout", () => {
@@ -156,12 +175,15 @@ test("spin prevents balance from going below zero", () => {
 });
 
 test("legal paths cover all adjacent-row combinations without row skips", () => {
-  assert.equal(LEGAL_PATHS.length, 99);
+  assert.equal(LEGAL_PATHS.length, 232);
   LEGAL_PATHS.forEach((path) => {
-    assert.equal(path.length, REEL_COUNT);
+    assert.ok(path.rows.length >= 3);
+    assert.ok(path.rows.length <= REEL_COUNT);
+    assert.ok(path.startReel >= 0);
+    assert.ok(path.startReel + path.rows.length <= REEL_COUNT);
 
-    for (let index = 1; index < path.length; index += 1) {
-      assert.ok(Math.abs(path[index] - path[index - 1]) <= 1);
+    for (let index = 1; index < path.rows.length; index += 1) {
+      assert.ok(Math.abs(path.rows[index] - path.rows[index - 1]) <= 1);
     }
   });
 });

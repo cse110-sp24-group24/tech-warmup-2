@@ -8,7 +8,7 @@ export const BIG_WIN_MULTIPLIER = 20;
 
 export const SYMBOLS = Object.freeze(["7", "BAR", "GEM", "STAR", "ORB", "COMET"]);
 
-export const LEGAL_PATHS = Object.freeze(createLegalPaths());
+export const LEGAL_PATHS = Object.freeze(createLegalWinPaths());
 
 const BASE_MULTIPLIERS = Object.freeze({
   "7": 10,
@@ -109,13 +109,13 @@ export function getCenterPayline(reels) {
 /**
  * Evaluates left-to-right matches on one payline using the paytable.
  *
- * @param {string[]} payline Five payline symbols.
+ * @param {string[]} payline Payline symbols.
  * @param {Map<string, { multiplier: number, label: string }>} paytable Paytable lookup.
  * @returns {{ key: string | null, multiplier: number, matchedCount: number, matchedSymbol: string | null, label: string }}
  */
 export function evaluatePayline(payline, paytable = PAYTABLE) {
-  if (!Array.isArray(payline) || payline.length !== REEL_COUNT) {
-    throw new RangeError("Payline must contain exactly five symbols.");
+  if (!Array.isArray(payline) || payline.length < 3 || payline.length > REEL_COUNT) {
+    throw new RangeError("Payline must contain three, four, or five symbols.");
   }
 
   const [firstSymbol] = payline;
@@ -137,7 +137,7 @@ export function evaluatePayline(payline, paytable = PAYTABLE) {
  * Evaluates every legal adjacent-row path and totals the multipliers.
  *
  * @param {string[][]} reels Current visible reel symbols.
- * @param {ReadonlyArray<readonly number[]>} legalPaths Legal row paths.
+ * @param {ReadonlyArray<{ startReel: number, rows: readonly number[] }>} legalPaths Legal win paths.
  * @param {Map<string, { multiplier: number, label: string }>} paytable Paytable lookup.
  * @returns {{ wins: Array<ReturnType<typeof evaluatePayline> & { pathName: string, path: number[], payline: string[], cells: Array<{ reelIndex: number, rowIndex: number }> }>, totalMultiplier: number }}
  */
@@ -146,27 +146,30 @@ export function evaluateReels(reels, legalPaths = LEGAL_PATHS, paytable = PAYTAB
 
   const winsByPath = new Map();
 
-  legalPaths.forEach((path) => {
-    const payline = getPayline(reels, path);
+  legalPaths.forEach((pathDefinition) => {
+    const payline = getPathSymbols(reels, pathDefinition);
     const win = evaluatePayline(payline, paytable);
 
     if (win.multiplier === 0) {
       return;
     }
 
-    const cells = path.slice(0, win.matchedCount).map((rowIndex, reelIndex) => ({ reelIndex, rowIndex }));
+    const cells = pathDefinition.rows.slice(0, win.matchedCount).map((rowIndex, index) => ({
+      reelIndex: pathDefinition.startReel + index,
+      rowIndex
+    }));
     const key = `${win.matchedSymbol}:${cells.map((cell) => `${cell.reelIndex}-${cell.rowIndex}`).join("|")}`;
 
     winsByPath.set(key, {
       ...win,
       pathName: cells.map((cell) => `${cell.rowIndex + 1}`).join("-"),
-      path,
+      path: [...pathDefinition.rows],
       payline,
       cells
     });
   });
 
-  const wins = removeShorterPrefixWins(Array.from(winsByPath.values()));
+  const wins = removeShorterContainedWins(Array.from(winsByPath.values()));
 
   return {
     wins,
@@ -258,63 +261,91 @@ function validateRowPattern(rowPattern) {
 }
 
 /**
- * Removes shorter wins when the exact same symbol path continues farther right.
+ * Extracts symbols for a shorter legal win path that may begin on any reel.
+ *
+ * @param {string[][]} reels Current visible reel symbols.
+ * @param {{ startReel: number, rows: readonly number[] }} pathDefinition Legal win path.
+ * @returns {string[]}
+ */
+function getPathSymbols(reels, pathDefinition) {
+  return pathDefinition.rows.map((rowIndex, index) => reels[pathDefinition.startReel + index][rowIndex]);
+}
+
+/**
+ * Removes shorter wins when the exact same symbol path is contained inside a longer one.
  *
  * @param {Array<ReturnType<typeof evaluatePayline> & { cells: Array<{ reelIndex: number, rowIndex: number }> }>} wins Wins to filter.
  * @returns {Array<ReturnType<typeof evaluatePayline> & { cells: Array<{ reelIndex: number, rowIndex: number }> }>}
  */
-function removeShorterPrefixWins(wins) {
+function removeShorterContainedWins(wins) {
   return wins.filter(
     (win) =>
       !wins.some(
         (otherWin) =>
           otherWin.matchedSymbol === win.matchedSymbol &&
           otherWin.cells.length > win.cells.length &&
-          isCellPrefix(win.cells, otherWin.cells)
+          isCellRunContained(win.cells, otherWin.cells)
       )
   );
 }
 
 /**
- * @param {Array<{ reelIndex: number, rowIndex: number }>} shorter Candidate prefix.
+ * @param {Array<{ reelIndex: number, rowIndex: number }>} shorter Candidate contained run.
  * @param {Array<{ reelIndex: number, rowIndex: number }>} longer Candidate longer path.
  * @returns {boolean}
  */
-function isCellPrefix(shorter, longer) {
-  return shorter.every(
-    (cell, index) => cell.reelIndex === longer[index].reelIndex && cell.rowIndex === longer[index].rowIndex
-  );
+function isCellRunContained(shorter, longer) {
+  const maxStartIndex = longer.length - shorter.length;
+
+  for (let startIndex = 0; startIndex <= maxStartIndex; startIndex += 1) {
+    const contained = shorter.every((cell, index) => {
+      const longerCell = longer[startIndex + index];
+      return cell.reelIndex === longerCell.reelIndex && cell.rowIndex === longerCell.rowIndex;
+    });
+
+    if (contained) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 /**
- * Builds every legal 5-reel path where neighboring reels stay on the same row
- * or move one row up/down. Top-to-bottom jumps are intentionally excluded.
+ * Builds every legal 3, 4, and 5-reel win path. Each path may begin on any
+ * reel and neighboring reels stay on the same row or move one row up/down.
  *
- * @returns {Array<readonly number[]>}
+ * @returns {Array<{ startReel: number, rows: readonly number[] }>}
  */
-function createLegalPaths() {
+function createLegalWinPaths() {
   const paths = [];
 
-  for (let startRow = 0; startRow < ROW_COUNT; startRow += 1) {
-    extendPath([startRow]);
+  for (let length = 3; length <= REEL_COUNT; length += 1) {
+    for (let startReel = 0; startReel <= REEL_COUNT - length; startReel += 1) {
+      for (let startRow = 0; startRow < ROW_COUNT; startRow += 1) {
+        extendPath(startReel, length, [startRow]);
+      }
+    }
   }
 
-  return paths.map((path) => Object.freeze(path));
+  return paths.map((path) => Object.freeze({ startReel: path.startReel, rows: Object.freeze(path.rows) }));
 
   /**
+   * @param {number} startReel First reel in the path.
+   * @param {number} length Path length.
    * @param {number[]} path Partial row path.
    * @returns {void}
    */
-  function extendPath(path) {
-    if (path.length === REEL_COUNT) {
-      paths.push(path);
+  function extendPath(startReel, length, path) {
+    if (path.length === length) {
+      paths.push({ startReel, rows: path });
       return;
     }
 
     const previousRow = path[path.length - 1];
     for (let nextRow = previousRow - 1; nextRow <= previousRow + 1; nextRow += 1) {
       if (nextRow >= 0 && nextRow < ROW_COUNT) {
-        extendPath([...path, nextRow]);
+        extendPath(startReel, length, [...path, nextRow]);
       }
     }
   }

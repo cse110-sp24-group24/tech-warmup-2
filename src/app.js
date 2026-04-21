@@ -11,6 +11,7 @@ import { RetroSpaceBackground } from "./spaceBackground.js";
 
 const SPIN_DURATION_MS = 950;
 const REEL_STOP_STAGGER_MS = 130;
+const CONFETTI_COLORS = Object.freeze(["#2ff8ff", "#ff3df2", "#9b5cff", "#ffd166", "#54ffad"]);
 const SYMBOL_EMBLEMS = Object.freeze({
   "7": "7",
   BAR: "▰",
@@ -176,16 +177,18 @@ function announceOutcome(outcome) {
 
   const isBigWin = outcome.totalMultiplier >= BIG_WIN_MULTIPLIER;
   const statusType = isBigWin ? "big" : "win";
-  const paylineText = outcome.wins.length === 1 ? "1 payline" : `${outcome.wins.length} paylines`;
+  const comboText = outcome.wins.length === 1 ? "1 combo" : `${outcome.wins.length} combos`;
+
+  audio.playHooray();
 
   if (isBigWin) {
     background.triggerWarp();
     audio.playBigWin();
-  } else {
-    audio.playWin();
   }
 
-  setStatus(`${paylineText} pays ${outcome.payout} tokens.`, statusType);
+  background.triggerFireworks();
+  launchConfetti();
+  setStatus(`${comboText} pays ${outcome.payout} tokens.`, statusType);
 }
 
 /**
@@ -198,8 +201,8 @@ function renderPaytable() {
       const row = document.createElement("div");
       row.className = "paytable-row";
 
-    const label = document.createElement("span");
-    label.textContent = `${entry.count} ${SYMBOL_EMBLEMS[entry.symbol]} ${entry.symbol}`;
+      const label = document.createElement("span");
+      label.textContent = `${entry.count} ${SYMBOL_EMBLEMS[entry.symbol]} ${entry.symbol}`;
 
       const multiplier = document.createElement("strong");
       multiplier.textContent = `${entry.multiplier}x`;
@@ -217,7 +220,7 @@ function renderPaytable() {
 function renderPaylines() {
   const rows = [
     ["Rows may stay level or move one row up/down between adjacent reels."],
-    ["Winning paths start from the left reel and use adjacent reels only."],
+    ["Winning paths can start on any reel and use adjacent reels only."],
     [`${LEGAL_PATHS.length} legal paths are checked each spin; fixed V/diagonal shapes are not required.`]
   ].map(([text]) => {
     const row = document.createElement("div");
@@ -231,6 +234,32 @@ function renderPaylines() {
   });
 
   elements.paylineList.replaceChildren(...rows);
+}
+
+/**
+ * Drops a short burst of pixel confetti over the slot machine.
+ *
+ * @returns {void}
+ */
+function launchConfetti() {
+  const container = document.createElement("div");
+  container.className = "confetti";
+  container.setAttribute("aria-hidden", "true");
+
+  const pieces = Array.from({ length: 44 }, (_, index) => {
+    const piece = document.createElement("span");
+    piece.className = "confetti-piece";
+    piece.style.setProperty("--x", `${Math.random() * 100}vw`);
+    piece.style.setProperty("--drift", `${Math.random() * 220 - 110}px`);
+    piece.style.setProperty("--delay", `${Math.random() * 0.22}s`);
+    piece.style.setProperty("--duration", `${1.35 + Math.random() * 0.8}s`);
+    piece.style.setProperty("--color", CONFETTI_COLORS[index % CONFETTI_COLORS.length]);
+    return piece;
+  });
+
+  container.append(...pieces);
+  document.body.append(container);
+  window.setTimeout(() => container.remove(), 2600);
 }
 
 /**
@@ -323,7 +352,7 @@ function clamp(value, min, max) {
 /**
  * Creates compact Web Audio cues for wins, losses, and big wins.
  *
- * @returns {{ playWin: () => void, playLoss: () => void, playBigWin: () => void }}
+ * @returns {{ playHooray: () => void, playLoss: () => void, playBigWin: () => void }}
  */
 function createAudioFeedback() {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -359,7 +388,7 @@ function createAudioFeedback() {
   }
 
   return {
-    playWin: () => play([523, 659, 784], 0.12, "square"),
+    playHooray: () => play([523, 659, 784, 1046], 0.12, "square"),
     playLoss: () => play([220, 146], 0.16, "sawtooth"),
     playBigWin: () => play([392, 523, 659, 784, 1046], 0.11, "square")
   };

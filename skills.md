@@ -58,7 +58,7 @@ Your code must be:
 - Use a structured Paytable object (Map / Dictionary)
   - Do NOT use long if/else chains
 - Evaluate all legal adjacent-row paths, left to right
-  - Paths start on the leftmost reel
+  - Paths may start on any reel
   - Paths move across adjacent reels only
   - Each step may stay on the same row or move one row up/down
   - Paths cannot skip from top row directly to bottom row, or bottom row directly to top row
@@ -77,6 +77,7 @@ Your code must be:
   - Wins
   - Losses
   - Big wins
+- Wins must trigger confetti, a hooray sound effect, and background fireworks
 
 ---
 
@@ -132,6 +133,7 @@ Create a retro-futuristic pixel-art space background that feels alive and intera
 - Occasional shooting stars
 - Pulsing glow on planets
 - Big win effect: warp-speed / hyperspace animation
+- Win effect: pixel fireworks in the background
 
 ---
 

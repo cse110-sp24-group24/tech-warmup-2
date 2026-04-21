@@ -241,15 +241,6 @@ h2 {
   color: var(--magenta);
 }
 
-.symbol--center {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.symbol--top,
-.symbol--bottom {
-  opacity: 0.7;
-}
-
 .symbol.is-winning {
   position: relative;
   z-index: 1;
@@ -261,36 +252,6 @@ h2 {
     0 0 20px rgba(255, 209, 102, 0.62);
   opacity: 1;
   animation: winning-cell-pulse 0.76s ease-in-out infinite;
-}
-
-.payline-guide {
-  position: absolute;
-  left: clamp(36px, 5vw, 52px);
-  right: clamp(36px, 5vw, 52px);
-  top: 39%;
-  bottom: 31%;
-  pointer-events: none;
-}
-
-.payline-guide span {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(255, 61, 242, 0.58), rgba(47, 248, 255, 0.58), transparent);
-  box-shadow: 0 0 10px rgba(47, 248, 255, 0.54);
-}
-
-.payline-guide span:nth-child(1) {
-  top: 0;
-}
-
-.payline-guide span:nth-child(2) {
-  top: 50%;
-}
-
-.payline-guide span:nth-child(3) {
-  bottom: 0;
 }
 
 .controls {
@@ -453,6 +414,25 @@ input {
   color: var(--amber);
 }
 
+.confetti {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -16px;
+  left: var(--x);
+  width: 8px;
+  height: 12px;
+  background: var(--color);
+  box-shadow: 0 0 10px var(--color);
+  animation: confetti-fall var(--duration) ease-out var(--delay) forwards;
+}
+
 @keyframes reel-blur {
   from {
     transform: translateY(-26%);
@@ -475,6 +455,13 @@ input {
 @keyframes winning-cell-pulse {
   50% {
     transform: scale(1.06);
+  }
+}
+
+@keyframes confetti-fall {
+  to {
+    transform: translate(var(--drift), 105vh) rotate(720deg);
+    opacity: 0;
   }
 }
 

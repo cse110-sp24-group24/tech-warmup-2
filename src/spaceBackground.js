@@ -50,6 +50,26 @@ export class RetroSpaceBackground {
   }
 
   /**
+   * Launches several pixel firework bursts in the background.
+   *
+   * @returns {void}
+   */
+  triggerFireworks() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    for (let index = 0; index < 7; index += 1) {
+      this.explosions.push({
+        x: width * (0.16 + Math.random() * 0.68),
+        y: height * (0.12 + Math.random() * 0.42),
+        age: -index * 4,
+        color: STAR_COLORS[Math.floor(Math.random() * STAR_COLORS.length)],
+        firework: true
+      });
+    }
+  }
+
+  /**
    * Tears down listeners and animation.
    *
    * @returns {void}
@@ -342,6 +362,10 @@ export class RetroSpaceBackground {
 
     this.explosions.forEach((explosion) => {
       explosion.age += 1;
+      if (explosion.age < 0) {
+        return;
+      }
+
       const radius = explosion.age * 5;
 
       ctx.save();
@@ -351,6 +375,18 @@ export class RetroSpaceBackground {
       ctx.shadowColor = explosion.color;
       ctx.shadowBlur = 14;
       ctx.strokeRect(explosion.x - radius / 2, explosion.y - radius / 2, radius, radius);
+
+      if (explosion.firework) {
+        for (let spark = 0; spark < 12; spark += 1) {
+          const angle = (Math.PI * 2 * spark) / 12;
+          const sparkDistance = radius * 0.72;
+          const x = explosion.x + Math.cos(angle) * sparkDistance;
+          const y = explosion.y + Math.sin(angle) * sparkDistance;
+          ctx.fillStyle = explosion.color;
+          ctx.fillRect(Math.round(x), Math.round(y), 4, 4);
+        }
+      }
+
       ctx.restore();
     });
   }
