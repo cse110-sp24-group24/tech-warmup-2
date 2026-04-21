@@ -38,6 +38,10 @@ input {
   font: inherit;
 }
 
+button {
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
 #space_background,
 .crt_overlay {
   position: fixed;
@@ -67,28 +71,43 @@ input {
 }
 
 .game_shell {
-  width: min(920px, calc(100% - 32px));
+  width: min(1240px, calc(100% - 32px));
   min-height: 100vh;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 320px;
   gap: 16px;
   align-items: center;
   padding: 28px 0;
 }
 
 .machine,
-.paytable_tab {
+.paytable_tab,
+.shop_panel {
   border: 2px solid var(--border);
   border-radius: 8px;
   background: var(--panel);
   box-shadow: 0 0 24px rgba(47, 248, 255, 0.2), inset 0 0 40px rgba(155, 92, 255, 0.12);
   backdrop-filter: blur(8px);
+  animation: panel-float 5.5s ease-in-out infinite;
 }
 
 .machine {
   position: relative;
+  grid-column: 1;
   padding: clamp(18px, 4vw, 34px);
+}
+
+.paytable_tab {
+  grid-column: 1;
+}
+
+.shop_panel {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: stretch;
+  padding: 20px;
+  overflow: hidden;
 }
 
 .boost_indicator {
@@ -105,6 +124,7 @@ input {
   box-shadow: 0 0 16px rgba(255, 209, 102, 0.34);
   font-size: 0.78rem;
   text-transform: uppercase;
+  animation: boost-pulse 1.2s ease-in-out infinite;
 }
 
 .boost_indicator[hidden] {
@@ -176,6 +196,7 @@ h2 {
   color: var(--cyan);
   text-align: center;
   text-transform: uppercase;
+  transition: border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .status_win {
@@ -204,6 +225,12 @@ h2 {
   border-radius: 8px;
   background: linear-gradient(180deg, rgba(1, 4, 18, 0.92), rgba(19, 5, 31, 0.9));
   box-shadow: inset 0 0 30px rgba(47, 248, 255, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reels:hover {
+  transform: translateY(-2px);
+  box-shadow: inset 0 0 30px rgba(47, 248, 255, 0.24), 0 0 24px rgba(255, 61, 242, 0.24);
 }
 
 .reel {
@@ -216,6 +243,13 @@ h2 {
   border-radius: 6px;
   background: #050712;
   box-shadow: inset 0 0 22px rgba(74, 168, 255, 0.28);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.reel:hover {
+  transform: scale(1.015);
+  border-color: rgba(255, 209, 102, 0.76);
+  box-shadow: inset 0 0 22px rgba(74, 168, 255, 0.34), 0 0 14px rgba(255, 209, 102, 0.2);
 }
 
 .reel.is_spinning .symbol {
@@ -235,6 +269,7 @@ h2 {
   text-align: center;
   text-shadow: 0 0 10px currentColor;
   word-break: break-word;
+  transition: transform 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
 }
 
 .symbol[data-symbol="7"] {
@@ -307,6 +342,7 @@ h2 {
 .icon_button:hover,
 .spin_button:hover,
 .auto_spin_button:hover {
+  transform: translateY(-2px);
   box-shadow: 0 0 18px rgba(47, 248, 255, 0.42);
 }
 
@@ -344,13 +380,11 @@ input {
   background: linear-gradient(135deg, rgba(255, 209, 102, 0.28), rgba(47, 248, 255, 0.18));
 }
 
-.paytable_tab,
-.shop_tab {
+.paytable_tab {
   overflow: hidden;
 }
 
-.paytable_tab_button,
-.shop_tab_button {
+.paytable_tab_button {
   width: 100%;
   min-height: 54px;
   display: flex;
@@ -365,20 +399,17 @@ input {
   text-transform: uppercase;
 }
 
-.paytable_tab_button:hover,
-.shop_tab_button:hover {
+.paytable_tab_button:hover {
   color: var(--ink);
   box-shadow: inset 0 0 18px rgba(47, 248, 255, 0.24);
 }
 
-.paytable_tab_button span:first-child,
-.shop_tab_button span:first-child {
+.paytable_tab_button span:first-child {
   font-size: 1.1rem;
   font-weight: 700;
 }
 
-.paytable_tab_icon,
-.shop_tab_icon {
+.paytable_tab_icon {
   width: 30px;
   height: 30px;
   display: inline-flex;
@@ -389,14 +420,12 @@ input {
   color: var(--amber);
 }
 
-.paytable_tab_panel,
-.shop_tab_panel {
+.paytable_tab_panel {
   padding: 18px;
   border-top: 1px solid rgba(116, 232, 255, 0.24);
 }
 
-.paytable_tab_panel[hidden],
-.shop_tab_panel[hidden] {
+.paytable_tab_panel[hidden] {
   display: none;
 }
 
@@ -414,10 +443,14 @@ input {
 }
 
 .paytable_tab h2,
-.shop_tab h2 {
+.shop_panel h2 {
   margin-top: 18px;
   font-size: 1rem;
   color: var(--ink);
+}
+
+.shop_panel h2 {
+  margin-top: 0;
 }
 
 .paytable_list,
@@ -437,6 +470,14 @@ input {
   border: 1px solid rgba(170, 183, 214, 0.24);
   border-radius: 6px;
   background: rgba(3, 5, 18, 0.64);
+  transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+}
+
+.paytable_row:hover,
+.shop_item:hover {
+  transform: translateX(3px);
+  border-color: rgba(47, 248, 255, 0.46);
+  background: rgba(8, 12, 34, 0.86);
 }
 
 .paytable_row span,
@@ -449,7 +490,8 @@ input {
 }
 
 .shop_buy_button,
-.chest_button {
+.chest_button,
+.reward_continue_button {
   min-height: 40px;
   border: 1px solid rgba(255, 209, 102, 0.68);
   border-radius: 6px;
@@ -459,7 +501,9 @@ input {
 }
 
 .shop_buy_button:hover,
-.chest_button:hover {
+.chest_button:hover,
+.reward_continue_button:hover {
+  transform: translateY(-2px);
   box-shadow: 0 0 18px rgba(255, 209, 102, 0.34);
 }
 
@@ -490,6 +534,7 @@ input {
   background: var(--panel-strong);
   box-shadow: 0 0 34px rgba(47, 248, 255, 0.24);
   text-align: center;
+  animation: modal-pop 0.42s cubic-bezier(0.2, 1.4, 0.34, 1);
 }
 
 .modal_panel p {
@@ -505,8 +550,38 @@ input {
 
 .chest_button {
   min-height: 96px;
+  display: grid;
+  gap: 8px;
+  place-items: center;
   font-size: 1rem;
   text-transform: uppercase;
+  animation: chest-bounce 1.6s ease-in-out infinite;
+}
+
+.chest_button span {
+  font-size: 2.2rem;
+}
+
+.reward_panel {
+  animation: reward-pop 0.72s cubic-bezier(0.2, 1.6, 0.34, 1);
+}
+
+.reward_amount {
+  margin: 18px 0;
+  color: var(--amber);
+  font-size: clamp(2.4rem, 8vw, 5rem);
+  text-shadow: 0 0 22px rgba(255, 209, 102, 0.68);
+  animation: reward-glow 0.9s ease-in-out infinite;
+}
+
+.reward_continue_button {
+  min-height: 44px;
+  padding: 0 24px;
+  border: 1px solid rgba(47, 248, 255, 0.72);
+  border-radius: 6px;
+  color: var(--ink);
+  background: rgba(8, 12, 34, 0.96);
+  cursor: pointer;
 }
 
 .confetti {
@@ -526,6 +601,24 @@ input {
   background: var(--color);
   box-shadow: 0 0 10px var(--color);
   animation: confetti-fall var(--duration) ease-out var(--delay) forwards;
+}
+
+.lightning_overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: rgba(248, 251, 255, 0.08);
+  animation: lightning-flash 1.1s ease-out forwards;
+}
+
+.lightning_bolt {
+  color: var(--amber);
+  font-size: clamp(6rem, 22vw, 16rem);
+  text-shadow: 0 0 30px rgba(255, 209, 102, 0.95), 0 0 80px rgba(47, 248, 255, 0.7);
+  animation: lightning-strike 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes reel-blur {
@@ -560,6 +653,76 @@ input {
   }
 }
 
+@keyframes panel-float {
+  50% {
+    box-shadow: 0 0 30px rgba(47, 248, 255, 0.24), inset 0 0 44px rgba(155, 92, 255, 0.16);
+  }
+}
+
+@keyframes boost-pulse {
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 0 24px rgba(255, 209, 102, 0.52);
+  }
+}
+
+@keyframes modal-pop {
+  from {
+    transform: translateY(16px) scale(0.94);
+    opacity: 0;
+  }
+}
+
+@keyframes chest-bounce {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes reward-pop {
+  from {
+    transform: scale(0.62) rotate(-4deg);
+    opacity: 0;
+  }
+}
+
+@keyframes reward-glow {
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes lightning-flash {
+  0%,
+  18%,
+  34% {
+    background: rgba(248, 251, 255, 0.34);
+  }
+
+  8%,
+  26%,
+  100% {
+    background: rgba(248, 251, 255, 0);
+  }
+}
+
+@keyframes lightning-strike {
+  0% {
+    transform: scale(0.3) rotate(-18deg);
+    opacity: 0;
+  }
+
+  35% {
+    transform: scale(1.1) rotate(6deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1.5) rotate(0deg);
+    opacity: 0;
+  }
+}
+
 @media (max-width: 860px) {
   .game_shell {
     grid-template-columns: 1fr;
@@ -579,6 +742,13 @@ input {
   .balance_panel {
     width: 100%;
     text-align: left;
+  }
+
+  .shop_panel,
+  .paytable_tab,
+  .machine {
+    grid-column: 1;
+    grid-row: auto;
   }
 }
 

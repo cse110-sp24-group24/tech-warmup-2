@@ -27,7 +27,7 @@
         <div class="machine_header">
           <div>
             <p class="eyebrow">Kode Bryant Casino</p>
-            <h1 id="game_title">Kode Bryant Casino</h1>
+            <h1 id="game_title">Space and Beyond</h1>
           </div>
           <div class="balance_panel" aria-live="polite">
             <span>Tokens</span>
@@ -77,7 +77,7 @@
           <label for="bet">Bet</label>
           <div class="bet_control">
             <button class="icon_button" type="button" id="decrease_bet" aria-label="Decrease bet">-</button>
-            <input id="bet" name="bet" type="number" min="1" max="10" step="1" value="5">
+            <input id="bet" name="bet" type="number" min="1" max="100" step="1" value="5">
             <button class="icon_button" type="button" id="increase_bet" aria-label="Increase bet">+</button>
           </div>
           <button class="spin_button" id="spin_button" type="submit">
@@ -117,25 +117,14 @@
 
 
       <!-- Shop -->
-      <section class="shop_tab" aria-labelledby="shop_title">
-        <button
-          class="shop_tab_button"
-          id="shop_toggle"
-          type="button"
-          aria-expanded="false"
-          aria-controls="shop_panel"
-        >
-          <span id="shop_title">Shop</span>
-          <span class="shop_tab_icon" aria-hidden="true">+</span>
-        </button>
-        <div class="shop_tab_panel" id="shop_panel" hidden>
-          <div class="shop_rules">
-            <p>Buy one payout boost at a time. Boosts apply to the next 5 spins.</p>
-          </div>
-
-          <div class="shop_items" id="shop_items"></div>
+      <aside class="shop_panel" aria-labelledby="shop_title">
+        <h2 id="shop_title">Shop</h2>
+        <div class="shop_rules">
+          <p>Buy one payout boost at a time. Boosts apply to the next 5 spins.</p>
         </div>
-      </section>
+
+        <div class="shop_items" id="shop_items"></div>
+      </aside>
 
     </main>
 
@@ -146,6 +135,16 @@
         <h2 id="chest_title">Choose A Chest</h2>
         <p>Your tokens hit zero. Pick one chest for a comeback.</p>
         <div class="chest_grid" id="chest_grid"></div>
+      </div>
+    </div>
+
+
+    <!-- Chest Reward Popup -->
+    <div class="modal_overlay" id="reward_modal" role="dialog" aria-modal="true" aria-labelledby="reward_title" hidden>
+      <div class="modal_panel reward_panel">
+        <h2 id="reward_title">Chest Opened</h2>
+        <div class="reward_amount" id="reward_amount">0 tokens</div>
+        <button class="reward_continue_button" id="reward_continue_button" type="button">Continue</button>
       </div>
     </div>
 

@@ -34,6 +34,7 @@ Your code must be:
 ## Game Rules
 
 - Game name is "Kode Bryant Casino"
+- Slot machine name is "Space and Beyond"
 - Player starts with a fixed token balance
 - Each spin requires a bet amount
   - Must have defined minimum and maximum bet
@@ -45,8 +46,9 @@ Your code must be:
 - Game ends when balance < minimum bet
 - A clean "Pay Table" tab must be visible below the slot machine
   - Opening the tab shows rules and symbol payouts
-- A clean "Shop" tab must be visible below the slot machine
-  - Opening the tab shows payout boosts that can be bought with tokens
+- A clean shop panel must be visible to the right of the slot machine on desktop
+  - The panel shows payout boosts that can be bought with tokens
+- During auto-spin, pause for 3 seconds after a win so the player can see the winning symbols
 - Payout boosts last for the next 5 spins
 - When a payout boost is active, an icon with "payout boost active" must appear in the top corner of the slot machine
 - When the player runs out of tokens, show a redemption popup with 3 chests

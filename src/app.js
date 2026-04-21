@@ -1,7 +1,6 @@
 import {
   BIG_WIN_MULTIPLIER,
   INITIAL_BALANCE,
-  MAX_BET,
   MIN_BET,
   PAYTABLE,
   spin
@@ -11,6 +10,7 @@ import { RetroSpaceBackground } from "./spaceBackground.js";
 const SPIN_DURATION_MS = 950;
 const REEL_STOP_STAGGER_MS = 130;
 const AUTO_SPIN_COUNT = 5;
+const AUTO_SPIN_WIN_PAUSE_MS = 3000;
 const BOOST_SPIN_COUNT = 5;
 const CONFETTI_COLORS = Object.freeze(["#2ff8ff", "#ff3df2", "#9b5cff", "#ffd166", "#54ffad"]);
 const CHEST_REWARDS = Object.freeze([50, 500, 0]);
@@ -50,9 +50,10 @@ const elements = {
   paytablePanel: document.querySelector("#paytable_panel"),
   paytableToggle: document.querySelector("#paytable_toggle"),
   reels: Array.from(document.querySelectorAll(".reel")),
+  rewardAmount: document.querySelector("#reward_amount"),
+  rewardContinueButton: document.querySelector("#reward_continue_button"),
+  rewardModal: document.querySelector("#reward_modal"),
   shopItems: document.querySelector("#shop_items"),
-  shopPanel: document.querySelector("#shop_panel"),
-  shopToggle: document.querySelector("#shop_toggle"),
   spinButton: document.querySelector("#spin_button"),
   status: document.querySelector("#status")
 };
@@ -82,7 +83,7 @@ elements.decreaseBet.addEventListener("click", () => adjustBet(-1));
 elements.increaseBet.addEventListener("click", () => adjustBet(1));
 elements.bet.addEventListener("input", updateBetBounds);
 elements.paytableToggle.addEventListener("click", togglePaytable);
-elements.shopToggle.addEventListener("click", toggleShop);
+elements.rewardContinueButton.addEventListener("click", closeRewardModal);
 
 /**
  * Handles one complete spin, with the result computed before animation starts.
@@ -115,10 +116,14 @@ async function handleAutoSpin() {
 
   try {
     for (let count = 0; count < AUTO_SPIN_COUNT && state.balance >= MIN_BET; count += 1) {
-      await runSpin({ restoreControls: false });
+      const outcome = await runSpin({ restoreControls: false });
 
       if (state.balance < MIN_BET) {
         break;
+      }
+
+      if (outcome?.payout > 0) {
+        await delay(AUTO_SPIN_WIN_PAUSE_MS);
       }
     }
   } finally {
@@ -133,11 +138,11 @@ async function handleAutoSpin() {
  * Runs one spin while keeping spin() as the permanent balance authority.
  *
  * @param {{ restoreControls?: boolean }} [options] Cleanup behavior.
- * @returns {Promise<void>}
+ * @returns {Promise<ReturnType<typeof spin> | undefined>}
  */
 async function runSpin({ restoreControls = true } = {}) {
   if (state.spinning) {
-    return;
+    return undefined;
   }
 
   const startingBalance = state.balance;
@@ -160,9 +165,11 @@ async function runSpin({ restoreControls = true } = {}) {
     announceOutcome(outcome);
     highlightWinningCells(outcome.wins);
     consumeBoostSpin();
+    return outcome;
   } catch (error) {
     state.balance = outcome?.balance ?? startingBalance;
     setStatus(error.message, "loss");
+    return outcome;
   } finally {
     state.spinning = false;
     renderBalance();
@@ -373,16 +380,6 @@ function togglePaytable() {
 /**
  * @returns {void}
  */
-function toggleShop() {
-  const expanded = elements.shopToggle.getAttribute("aria-expanded") === "true";
-  elements.shopToggle.setAttribute("aria-expanded", String(!expanded));
-  elements.shopPanel.hidden = expanded;
-  elements.shopToggle.querySelector(".shop_tab_icon").textContent = expanded ? "+" : "-";
-}
-
-/**
- * @returns {void}
- */
 function renderShop() {
   const items = SHOP_ITEMS.map((item) => {
     const row = document.createElement("div");
@@ -426,6 +423,7 @@ function buyBoost(item) {
   renderBoostIndicator();
   renderShop();
   updateBetBounds();
+  launchLightningBolt();
   setStatus(`${item.label} active for ${BOOST_SPIN_COUNT} spins.`, "ready");
 }
 
@@ -462,7 +460,7 @@ function renderChests() {
     const button = document.createElement("button");
     button.className = "chest_button";
     button.type = "button";
-    button.textContent = `Chest ${index + 1}`;
+    button.innerHTML = `<span aria-hidden="true">🎁</span><strong>Chest ${index + 1}</strong>`;
     button.addEventListener("click", () => redeemChest(reward));
     return button;
   });
@@ -476,13 +474,31 @@ function renderChests() {
  */
 function redeemChest(reward) {
   state.balance = reward;
-  state.chestOpen = false;
   elements.chestModal.hidden = true;
   renderBalance();
   updateBetBounds();
   renderShop();
-  setControlsEnabled(state.balance >= MIN_BET);
+  openRewardModal(reward);
+}
+
+/**
+ * @param {number} reward Token reward.
+ * @returns {void}
+ */
+function openRewardModal(reward) {
+  elements.rewardAmount.textContent = `${reward} tokens`;
+  elements.rewardModal.hidden = false;
   setStatus(reward > 0 ? `Chest redeemed: ${reward} tokens.` : "Empty chest. Better luck next time.", "ready");
+}
+
+/**
+ * @returns {void}
+ */
+function closeRewardModal() {
+  state.chestOpen = false;
+  elements.rewardModal.hidden = true;
+  setControlsEnabled(state.balance >= MIN_BET);
+  updateBetBounds();
 }
 
 /**
@@ -548,7 +564,7 @@ function updateBetBounds() {
  * @returns {number}
  */
 function getCurrentMaxBet() {
-  return Math.max(MIN_BET, Math.min(MAX_BET, state.balance));
+  return Math.max(MIN_BET, state.balance);
 }
 
 /**
@@ -588,6 +604,28 @@ function shuffleArray(items) {
   }
 
   return items;
+}
+
+/**
+ * @param {number} milliseconds Delay length.
+ * @returns {Promise<void>}
+ */
+function delay(milliseconds) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, milliseconds);
+  });
+}
+
+/**
+ * @returns {void}
+ */
+function launchLightningBolt() {
+  const overlay = document.createElement("div");
+  overlay.className = "lightning_overlay";
+  overlay.setAttribute("aria-hidden", "true");
+  overlay.innerHTML = '<div class="lightning_bolt">⚡</div>';
+  document.body.append(overlay);
+  window.setTimeout(() => overlay.remove(), 1200);
 }
 
 /**

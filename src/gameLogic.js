@@ -2,7 +2,7 @@ export const REEL_COUNT = 5;
 export const ROW_COUNT = 3;
 export const INITIAL_BALANCE = 100;
 export const MIN_BET = 1;
-export const MAX_BET = 10;
+export const MAX_BET = Number.MAX_SAFE_INTEGER;
 export const BIG_WIN_MULTIPLIER = 12;
 
 export const SYMBOLS = Object.freeze(["7", "BAR", "GEM", "STAR", "ORB", "COMET"]);
