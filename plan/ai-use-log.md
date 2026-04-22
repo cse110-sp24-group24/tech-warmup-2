@@ -1,10 +1,10 @@
 ## Entry 01
 
-**Date:** 2026-04-20
-**Time:** 2026-04-20T16:48:00-07:00
-**Feature / Task:** Create initial app using Skills.MD
-**Total Tokens Used:** 50,905
-**Time Taken:** 6m 42s
+* **Date:** 2026-04-20
+* **Time:** 2026-04-20T16:48:00-07:00
+* **Feature / Task:** Create initial app using Skills.MD
+* **Total Tokens Used:** 50,905
+* **Time Taken:** 6m 42s
 
 ### Objective
 Create our initial iteration for our slot machine
@@ -37,7 +37,7 @@ Produced a very general slot machine based on our skill.md and described everyth
 
 ### Outcome
 - It technically created everything that was requested. We no longer like the single row with 5 slots we initially wanted. We will change this so that we have a 3x5 grid for a higher chance of winning.
- - The AI needs to be told what to do specifically for visual elements like the paytable.
+- The AI needs to be told what to do specifically for visual elements like the paytable.
 - We also need to be more specific about win probabilities and things like that
 
 ### Manual Edits?
@@ -49,11 +49,11 @@ State clearly:
 
 ## Entry 02
 
-**Date:** 2026-04-20
-**Time:** 2026-04-20T17:11:00-07:00
-**Feature / Task:** Edit game logic by editing Skills.md and make paytable a tab
-**Total Tokens Used:** 15,662
-**Time Taken:** 2m 57s
+* **Date:** 2026-04-20
+* **Time:** 2026-04-20T17:11:00-07:00
+* **Feature / Task:** Edit game logic by editing Skills.md and make paytable a tab
+* **Total Tokens Used:** 15,662
+* **Time Taken:** 2m 57s
 
 ### Objective
 Fix issues from last time. 
@@ -65,16 +65,15 @@ Prompt 2: Lets use more traditional 3 by 5 slot machine rules to increase chance
 Explained how the paytable is now much more clear. Properly adjusted and explained its changes to the skills.md.
 
 ### Evaluation/Outcome
- 
 - Added the paytable as a dropdown
- - Pay table is slightly long
+- Pay table is slightly long
 - CSS passed W3C validation
 - 6 errors in HTML W3C validation (all relating to additional attribution tag not being specified) 
 - HTML was hard to read (spammed divs everywhere), clumped and used unconventional variable names
 - CSS seemed fairly acceptable.
 - Double-deduct display bug is still there, app.js still manually subtracts the bet from state.balance before the animation, then overwrites with outcome.balance after. Same issue as before, just wasn't addressed.
--  9 paylines on a 3-row grid means overlapping wins are possible, a single spin could hit multiple paylines with the same symbols, stacking multipliers. That may be intentional but could lead to unexpectedly large payouts that drain the house balance fast.
--  announceOutcome only shows payline count, not which ones hit, "2 paylines pays 40 tokens" isn't very informative when there are 9 possible lines. Players have no way of knowing which ones fired. 
+- 9 paylines on a 3-row grid means overlapping wins are possible, a single spin could hit multiple paylines with the same symbols, stacking multipliers. That may be intentional but could lead to unexpectedly large payouts that drain the house balance fast.
+- announceOutcome only shows payline count, not which ones hit, "2 paylines pays 40 tokens" isn't very informative when there are 9 possible lines. Players have no way of knowing which ones fired. 
 - drawParticles still ignores the time parameter in spaceBackground.js, that one carried over unchanged.
 
 ### Verification Performed
@@ -92,11 +91,11 @@ State clearly:
 
 ## Entry 03
 
-**Date:** 2026-04-20
-**Time:** 2026-04-20T17:24:10-07:00
-**Feature / Task:** Adjust UI to include emblems, and pay table modifications
-**Total Tokens Used:** 17,920
-**Time Taken:** 3m 35s
+* **Date:** 2026-04-20
+* **Time:** 2026-04-20T17:24:10-07:00
+* **Feature / Task:** Adjust UI to include emblems, and pay table modifications
+* **Total Tokens Used:** 17,920
+* **Time Taken:** 3m 35s
 
 ### Objective
 Make wins obvious and explicitly inform the user what type of wins exist and how to achieve them
@@ -111,7 +110,7 @@ Adjusted the winning logic and explained the changes it made. Explained how it a
 
 ### Evaluation/Outcome
 - App looks visually about the same as last time
- - Win percentages have improved
+- Win percentages have improved
 - variables goodly named
 - symbols emblems incorporated
 - CSS passed W3C validation
@@ -135,11 +134,11 @@ State clearly:
 
 ## Entry 04
 
-**Date:** 2026-04-20
-**Time:** 2026-04-20T17:37:17-07:00
-**Feature / Task:** Adjust winning combinations
-**Total Tokens Used:** 29,722
-**Time Taken:** 4m 0s
+* **Date:** 2026-04-20
+* **Time:** 2026-04-20T17:37:17-07:00
+* **Feature / Task:** Adjust winning combinations
+* **Total Tokens Used:** 29,722
+* **Time Taken:** 4m 0s
 
 ### Objective
 Allow winning combinations to start from any column, adjust code organization
@@ -151,14 +150,14 @@ Winning combinations don’t need to start from the left most column like they a
 Explained all the changes it made based on our prompt including winning chance and a lot of other small things.
 
 ### Evaluation/Outcome
- - good variable names
+- good variable names
 - too many wins, consider removing the 3-match win
- - proper JSDocs are present
+- proper JSDocs are present
 - Double-deduct display bug is still present, handleSpin in app.js manually subtracts the bet from state.balance before the animation, then overwrites with outcome.balance after. 
- - need to eliminate one of the functions from deducting balance
+- need to eliminate one of the functions from deducting balance
 - drawParticles still ignores time in spaceBackground.js, four iterations in, still untouched. 
- - spin() fails if options is undefined, crashes (put fallback behavior)
- - symbols are not validated in game state, only shape
+- spin() fails if options is undefined, crashes (put fallback behavior)
+- symbols are not validated in game state, only shape
 
 ### Verification Performed
 - Lint run? passed
@@ -175,11 +174,11 @@ State clearly:
 
 ## Entry 05
 
-**Date:** 2026-04-20
-**Time:** 2026-04-20T17:54:10-07:00
-**Feature / Task:** Add new features and 
-**Total Tokens Used:** 52,536
-**Time Taken:** 4m 20s
+* **Date:** 2026-04-20
+* **Time:** 2026-04-20T17:54:10-07:00
+* **Feature / Task:** Add new features and 
+* **Total Tokens Used:** 52,536
+* **Time Taken:** 4m 20s
 
 ### Objective
 Add new features like auto-spin and update win conditions while adjusting payouts; also improve UI/UX animations and fix bugs/code structure
@@ -212,12 +211,12 @@ Please update handleSpin() so it:
 - avoids any permanent double deduction bug
 
 ### Evaluation/Outcome
-Auto-spin has no way to stop mid-sequence — once started, all 5 spins run to completion with no cancel button
-Auto-spin keeps spinning once balance/tokens run out (starting at 1).
-Still not validating symbols
-CENTER_ROW_INDEX and getCenterPayline do not have importance anymore/ contribute to game logic
-Comments do not match actual implemented game logic (left-to-right in the comment suggests that we have paths starting from left, but we no longer do that logic)
-Visually still looks mostly ok (probably will have a lot of UI prompts later)
+- Auto-spin has no way to stop mid-sequence — once started, all 5 spins run to completion with no cancel button
+- Auto-spin keeps spinning once balance/tokens run out (starting at 1).
+- Still not validating symbols
+- CENTER_ROW_INDEX and getCenterPayline do not have importance anymore/ contribute to game logic
+- Comments do not match actual implemented game logic (left-to-right in the comment suggests that we have paths starting from left, but we no longer do that logic)
+- Visually still looks mostly ok (probably will have a lot of UI prompts later)
 
 ### Verification Performed
 - Lint run? passed
@@ -232,11 +231,11 @@ Visually still looks mostly ok (probably will have a lot of UI prompts later)
 
 ## Entry 06
 
-**Date:** 2026-04-20
-**Time:** 2026-04-20T18:03:23-07:00
-**Feature / Task:** Added a shop feature for upgrades
-**Total Tokens Used:** 22,679
-**Time Taken:** 3m 42s
+* **Date:** 2026-04-20
+* **Time:** 2026-04-20T18:03:23-07:00
+* **Feature / Task:** Added a shop feature for upgrades
+* **Total Tokens Used:** 22,679
+* **Time Taken:** 3m 42s
 
 ### Objective
 Add gameplay fixes & features, introduce a shop with temporary payout boosts, clean up the code by validating symbols, remove unused logic and update comments to match current game behavior.
@@ -252,7 +251,7 @@ Comments do not match actual implemented game logic (left-to-right in the commen
 - spin() computes gameOver: nextBalance < MIN_BET before the boost is applied. applyBoostToOutcome then increases the balance but spreads the old gameOver value into the returned object, so it's never updated. 
 - autospin only uses 4 of whatever you’re betting, instead of 5
 - in runSpin(), If animateReels() fails after showing the temporary deducted balance, this sets the balance to outcome.balance, which is the final resolved balance including payout even though the spin did not finish rendering cleanly.
- - condition in announceOutcome() is useless, it always return loss
+- condition in announceOutcome() is useless, it always return loss
 - In announceOutcome, playHooray is called unconditionally on any win, then playBigWin is called on top if it's a big win. Both schedule oscillators against the same AudioContext timestamp so they play simultaneously and clash. 
 
 ### Verification Performed
@@ -268,11 +267,11 @@ Comments do not match actual implemented game logic (left-to-right in the commen
 
 ## Entry 07
 
-**Date:** 2026-04-20
-**Time:** 2026-04-20T18:14:41-07:00
-**Feature / Task:** Moved shop to side, fix various bugs
-**Total Tokens Used:** 24998
-**Time Taken:** 3m 13s
+* **Date:** 2026-04-20
+* **Time:** 2026-04-20T18:14:41-07:00
+* **Feature / Task:** Moved shop to side, fix various bugs
+* **Total Tokens Used:** 24,998
+* **Time Taken:** 3m 13s
 
 ### Objective
 Add more interactivity by increasing max bet limits, pausing on wins during auto-spin, increasing bet limits, and enhancing chest rewards with emojis and animations. Also improves UI/UX
@@ -281,11 +280,10 @@ Add more interactivity by increasing max bet limits, pausing on wins during auto
 During the auto spins, if you win during one of the spins, pause for 3 seconds so we can see the winning combination. Increase the max bet to your current token total. Add emojis for the chests on the screen when you run out of tokens. After you pick a chest, a popup should appear with a cool animation with how many tokens you won. Keep the casino name “Kode Bryant Casino” but change the slot machine name to “Space and Beyond”. When you buy a powerup, there should be a full screen lightning bolt animation. Move the shop to the right of the slot machine, remove the drop down functionality, the shop should always be visible. Add even more animations to everything. I want it to look very appealing and very interactive at the same time.
 
 ### Evaluation/Outcome
- - If animateReels() fails, we restore outcome.balance. We should be restoring starting balance though.
- - setStatus() always resolves to false in announceOutcome()
+- If animateReels() fails, we restore outcome.balance. We should be restoring starting balance though.
+- setStatus() always resolves to false in announceOutcome()
 - getRandomInteger() should use 0x100000000 to utilize the full range.
- - Visually looks mostly nice, and added animations are all also nice
- 
+- Visually looks mostly nice, and added animations are all also nice
 
 ### Verification Performed
 - Lint run? passed
@@ -299,20 +297,23 @@ During the auto spins, if you win during one of the spins, pause for 3 seconds s
 
 ## Entry 08
 
-**Date:** 2026-04-20
-**Time:** 2026-04-20T18:22:02-07:00
-**Feature / Task:** Enhance shop animation, update chest visuals, fix various bugs
-**Total Tokens Used:** **Time Taken:** ### Objective
+* **Date:** 2026-04-20
+* **Time:** 2026-04-20T18:22:02-07:00
+* **Feature / Task:** Enhance shop animation, update chest visuals, fix various bugs
+* **Total Tokens Used:** [Not Logged]
+* **Time Taken:** [Not Logged]
+
+### Objective
 Fix UI and logic issues by enhancing the shop animation, updating chest visuals, and allowing more flexible bet input. Also correct the auto-spin token deduction bug so the spins consume the proper amount of tokens
 
 ### Prompt Used
 When you do the shop lightning animation, it should also write out “BOOST ACTIVATED” along with the lightning bolt. Replace the chest icons from presents to actual chests. The bet size box only allows you to start typing from 1, allowing the box to be 0 so we can type any value. The auto spins functionality doesn’t consume the correct amount of tokens. For example if you spin 5 times with a value of 10, it only consumes 40 tokens.
 
 ### Evaluation/Outcome
-runSpin() still restores the wrong balance on failure
-announceOutcome() has a useless conditional: setStatus(`No match. Lost ${outcome.bet} tokens.`, outcome.gameOver ? "loss" : "loss");
-Auto-spin win pause may happen even when chest flow should take over
-getCurrentMaxBet() and input rules are inconsistent with MIN_BET - now allowing 0 value bet
+- runSpin() still restores the wrong balance on failure
+- announceOutcome() has a useless conditional: setStatus(`No match. Lost ${outcome.bet} tokens.`, outcome.gameOver ? "loss" : "loss");
+- Auto-spin win pause may happen even when chest flow should take over
+- getCurrentMaxBet() and input rules are inconsistent with MIN_BET - now allowing 0 value bet
 
 ### Verification Performed
 - Lint run? Passed
@@ -324,18 +325,13 @@ getCurrentMaxBet() and input rules are inconsistent with MIN_BET - now allowing 
 
 —----------------------------------------------------------------------------------------------------------------------------
 
-
-
-
-
-
 ## Entry 09
 
-**Date:** 2026-04-21
-**Time:** 2026-04-21T14:04:50-07:00
-**Feature / Task:** Logic bugs and small UI shop change
-**Total Tokens Used:** 39,596
-**Time Taken:** 4m 23s
+* **Date:** 2026-04-21
+* **Time:** 2026-04-21T14:04:50-07:00
+* **Feature / Task:** Logic bugs and small UI shop change
+* **Total Tokens Used:** 39,596
+* **Time Taken:** 4m 23s
 
 ### Objective
 Improve gameplay correctness and UI clarity by fixing critical balance and auto-spin bugs; make shop a pop up
@@ -370,7 +366,6 @@ Improve gameplay correctness and UI clarity by fixing critical balance and auto-
 - all tests pass
 - UI for the shop looks inconsistent 
 
-
 ### Verification Performed
 - Lint run? passed
 - Tests run? passed
@@ -383,11 +378,11 @@ Improve gameplay correctness and UI clarity by fixing critical balance and auto-
 
 ## Entry 10
 
-**Date:** 2026-04-21
-**Time:** 2026-04-21T15:24:11-07:00
-**Feature / Task:** UI changes
-**Total Tokens Used:** 17,334
-**Time Taken:** 1m 13s
+* **Date:** 2026-04-21
+* **Time:** 2026-04-21T15:24:11-07:00
+* **Feature / Task:** UI changes
+* **Total Tokens Used:** 17,334
+* **Time Taken:** 1m 13s
 
 ### Objective
 Make the UI more appealing for the user.
@@ -400,7 +395,7 @@ Make the UI more appealing for the user.
 
 ### Evaluation/Outcome
 - Bet setter native spinner is now hidden
-- shop elements are consistent; light up if there are enough tokens to spend.  4x multiplier added
+- shop elements are consistent; light up if there are enough tokens to spend. 4x multiplier added
 - Pay table UI looks more engaging, no longer completely static
 - As with the last few iterations, UI can be softlocked when token count hits 0.  
 - Lost message is not accurate with auto setting (displays lost message for 1 spin of that bet). For auto, message should display the net amount won or lost
@@ -418,20 +413,20 @@ Make the UI more appealing for the user.
 
 ## Entry 11
 
-**Date:** 2026-04-21
-**Time:** 2026-04-21T17:32:36-07:00
-**Feature / Task:** UX changes
-**Total Tokens Used:** 44,186
-**Time Taken:** 3m 8s
+* **Date:** 2026-04-21
+* **Time:** 2026-04-21T17:32:36-07:00
+* **Feature / Task:** UX changes
+* **Total Tokens Used:** 44,186
+* **Time Taken:** 3m 8s
 
 ### Objective
-Fix messages for auto spin to consider total loss/gain.  Create custom cursor.  Fix html
+Fix messages for auto spin to consider total loss/gain. Create custom cursor. Fix html
 
 ### Prompt Used
 Fix auto-spin messaging so it reports the net total gain or loss over the entire auto-spin session instead of erroneously showing the error message for 1 spin. Implement a custom cursor for the game UI to improve visual polish and ensure it applies consistently without breaking standard UI interactions. Clean up and correct the HTML structure so it matches the current JavaScript and CSS, removing outdated, unused, or mismatched elements and references.
 
 ### Evaluation/Outcome
-- Cursor looks good and non-buggy.  Could be updated in future iterations to make more customization
+- Cursor looks good and non-buggy. Could be updated in future iterations to make more customization
 - Auto spin message now shows net gain or loss including number of spins, BUT it doesn’t show win when it happens (just shows “Spinning…”) 
 - HTML fixed to reflect current app state
 - All tests still pass
@@ -449,11 +444,11 @@ Fix auto-spin messaging so it reports the net total gain or loss over the entire
 
 ## Entry 12
 
-**Date:** 2026-04-21
-**Time:** 2026-04-21T19:49:05.076000-07:00 
-**Feature / Task:** Audio Change
-**Total Tokens Used:** 17,437
-**Time Taken:** 1m54s
+* **Date:** 2026-04-21
+* **Time:** 2026-04-21T19:49:05.076000-07:00 
+* **Feature / Task:** Audio Change
+* **Total Tokens Used:** 17,437
+* **Time Taken:** 1m 54s
 
 ### Objective
 Add cheerful default music and a triumphic winning sound when the user wins.
@@ -462,10 +457,10 @@ Add cheerful default music and a triumphic winning sound when the user wins.
 For the slot machine, can you add cheerful default music in the background of the game which plays on loop, and any extra sound effects when spinning the slot machine, and a triumphic winning sound when the user wins. Don't change the structure of the game.
 
 ### Evaluation/Outcome
--It broke all the buttons
--It changed the background to a more bland 
--Failed to add default music
--Can’t check if there is winning music as the spin button doesn’t work
+- It broke all the buttons
+- It changed the background to a more bland 
+- Failed to add default music
+- Can’t check if there is winning music as the spin button doesn’t work
 
 ### Verification Performed
 - Lint run? passed
@@ -478,11 +473,11 @@ For the slot machine, can you add cheerful default music in the background of th
 
 ## Entry 13
 
-**Date:** 2026-04-21
-**Time:** 2026-04-21T19:59:44.248000-07:00  
-**Feature / Task:** Audio change, fix background and buttons
-**Total Tokens Used:** 20,486
-**Time Taken:** 1m24s
+* **Date:** 2026-04-21
+* **Time:** 2026-04-21T19:59:44.248000-07:00  
+* **Feature / Task:** Audio change, fix background and buttons
+* **Total Tokens Used:** 20,486
+* **Time Taken:** 1m 24s
 
 ### Objective
 Add cheerful default music. Revert changes to background and buttons functions.
@@ -491,9 +486,9 @@ Add cheerful default music. Revert changes to background and buttons functions.
 make sure all the buttons are functional in the way they're supposed to be, for example, the spin button doesn't work. Also add the background music in the back and play it on loop. Change the background to what it was previously with the planets.
 
 ### Evaluation/Outcome
-Background only slightly changed, not reverted back to the original
-Failed to add default music in the background
-Buttons still doesn’t work
+- Background only slightly changed, not reverted back to the original
+- Failed to add default music in the background
+- Buttons still doesn’t work
 
 ### Verification Performed
 - Lint run? pass
@@ -505,11 +500,11 @@ Buttons still doesn’t work
 
 ## Entry 14
 
-**Date:** 2026-04-21
-**Time:** 2026-04-21T20:14:46.922000-07:00 
-**Feature / Task:** Audio change, fix background and buttons
-**Total Tokens Used:** 27,257
-**Time Taken:** 3m34s
+* **Date:** 2026-04-21
+* **Time:** 2026-04-21T20:14:46.922000-07:00 
+* **Feature / Task:** Audio change, fix background and buttons
+* **Total Tokens Used:** 27,257
+* **Time Taken:** 3m 34s
 
 ### Objective
 Add in music for the background, revert changes for background and fix buttons.
@@ -518,9 +513,9 @@ Add in music for the background, revert changes for background and fix buttons.
 There still isn't any audible background music, the buttons don't work, and the background is mostly the same. Could you try editing the html and css files if necessary to help implement the changes we requested? including the background music button functionality, and the original planet background. provide me with the full files of the code you decide to change.
 
 ### Evaluation/Outcome
-Background is reverted
-Buttons are working again
-There is an added button for music toggle 
+- Background is reverted
+- Buttons are working again
+- There is an added button for music toggle 
 
 ### Verification Performed
 - Lint run? pass
@@ -532,11 +527,11 @@ There is an added button for music toggle
 
 ## Entry 15
 
-**Date:** 2026-04-21
-**Time:** 2026-04-21T20:49:13.619000-07:00 
-**Feature / Task:** Change to music to fit theme and add winning audio
-**Total Tokens Used:** 24,673
-**Time Taken:** 2m54s
+* **Date:** 2026-04-21
+* **Time:** 2026-04-21T20:49:13.619000-07:00 
+* **Feature / Task:** Change to music to fit theme and add winning audio
+* **Total Tokens Used:** 24,673
+* **Time Taken:** 2m 54s
 
 ### Objective
 Change the music to fit the theme better and add confetti and sound for winning.
@@ -545,8 +540,8 @@ Change the music to fit the theme better and add confetti and sound for winning.
 The changes work. Now we would like to change the background music to be more sci-fi themed and fit the planetary background. Also add a specific sound effect, and confetti on the screen for when the user wins.
 
 ### Evaluation/Outcome
-Changed to “worse” music
-Added confetti and winning audio effect
+- Changed to “worse” music
+- Added confetti and winning audio effect
 
 ### Verification Performed
 - Lint run? pass
@@ -558,11 +553,11 @@ Added confetti and winning audio effect
 
 ## Entry 16
 
-**Date:** 2026-04-21
-**Time:** 2026-04-21T21:04:19.052000-07:00 
-**Feature / Task:** Change to sci-fi music to fit theme
-**Total Tokens Used:** 25,747
-**Time Taken:** 3m42s 
+* **Date:** 2026-04-21
+* **Time:** 2026-04-21T21:04:19.052000-07:00 
+* **Feature / Task:** Change to sci-fi music to fit theme
+* **Total Tokens Used:** 25,747
+* **Time Taken:** 3m 42s 
 
 ### Objective
 Change the music to fit the theme better.
@@ -571,8 +566,8 @@ Change the music to fit the theme better.
 this all works. could you change the background music entirely? make it something sci-fi and space themed, not anything that sounds like a harmonica. Can you write me the full files with all the changes you are going to make, including all the code that stayed the same. make sure the files are fully ready to copy paste and run.
 
 ### Evaluation/Outcome
-Music was changed to be better 
-Everything else was untouched
+- Music was changed to be better 
+- Everything else was untouched
 
 ### Verification Performed
 - Lint run? pass
@@ -582,26 +577,13 @@ Everything else was untouched
 ### Manual Edits?
 - No manual edits
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## Entry 17
 
-**Date:** 2026-04-21
-**Time:** 2026-04-21T23:01:19.032000-07:00
-**Feature / Task:** Add stop auto spin feature
-**Total Tokens Used:** 27,434
+* **Date:** 2026-04-21
+* **Time:** 2026-04-21T23:01:19.032000-07:00
+* **Feature / Task:** Add stop auto spin feature
+* **Total Tokens Used:** 27,434
+* **Time Taken:** [Not Logged]
 
 ### Objective
 Add a Stop Auto Spin button that safely cancels the remaining auto spins without breaking the game state.
@@ -641,11 +623,11 @@ Return full updated code.
 
 ## Entry 18
 
-**Date:** 2026-04-21
-**Time:** 2026-04-21 23:37:27 -07:00
-**Feature / Task:** Fix functionality of the app
-**Total Tokens Used:** 50,624
-**Time Taken:** 3m 56s
+* **Date:** 2026-04-21
+* **Time:** 2026-04-21 23:37:27 -07:00
+* **Feature / Task:** Fix functionality of the app
+* **Total Tokens Used:** 50,624
+* **Time Taken:** 3m 56s
 
 ### Objective
 None of the buttons seem to be working, aiming to get most of the functionality of the app back…
@@ -668,10 +650,10 @@ Find and fix issues like:
 Keep changes minimal, preserve UI, and ensure everything works end-to-end.
 
 ### Evaluation/Outcome
-The buttons work again!
-Repaired merge breakage in src/app.js
-Fixed auto-spin duplicate vars/calls, stop button behavior, runSpin bug, bet usage sync during auto-spin
-No UI/feature additions were made; changes were limited to fixing broken behavior
+- The buttons work again!
+- Repaired merge breakage in src/app.js
+- Fixed auto-spin duplicate vars/calls, stop button behavior, runSpin bug, bet usage sync during auto-spin
+- No UI/feature additions were made; changes were limited to fixing broken behavior
 
 ### Verification Performed
 - Lint run? pass
@@ -683,15 +665,14 @@ No UI/feature additions were made; changes were limited to fixing broken behavio
 
 ## Entry 19
 
-**Date:** 2026-04-21
-**Time:** 2026-04-22 00:02:05 -07:00
-**Feature / Task:** Add a flappy bird minigame!
-**Total Tokens Used:** 82,527
-**Time Taken:** 4m 47s
+* **Date:** 2026-04-21
+* **Time:** 2026-04-22 00:02:05 -07:00
+* **Feature / Task:** Add a flappy bird minigame!
+* **Total Tokens Used:** 82,527
+* **Time Taken:** 4m 47s
 
 ### Objective
 Add a flappy bird minigame while preserving the functionality of the rest of the app
-
 
 ### Prompt Used
 Add a Flappy Bird bonus mini-game to this slot machine app.
@@ -710,9 +691,9 @@ Requirements:
 Also fix any state or event-listener issues caused by integrating the mini-game, and summarize what you changed.
 
 ### Evaluation/Outcome
-When the game starts it is IMMEDIATE so the user almost always dies immediately…
-Modified index.hml, styles.css, and app.js
-The rest of the app seems to be working correctly
+- When the game starts it is IMMEDIATE so the user almost always dies immediately…
+- Modified index.hml, styles.css, and app.js
+- The rest of the app seems to be working correctly
 
 ### Verification Performed
 - Lint run? pass
@@ -725,11 +706,11 @@ The rest of the app seems to be working correctly
 
 ## Entry 20
 
-**Date:** 2026-04-21
-**Time:** 2026-04-22 00:09:12 -07:00
-**Feature / Task:** Fix flappy bird game so that the game does not start until the user presses spacebar.
-**Total Tokens Used:** 95,580
-**Time Taken:** 3m 22s
+* **Date:** 2026-04-21
+* **Time:** 2026-04-22 00:09:12 -07:00
+* **Feature / Task:** Fix flappy bird game so that the game does not start until the user presses spacebar.
+* **Total Tokens Used:** 95,580
+* **Time Taken:** 3m 22s
 
 ### Objective
 Fix flappy bird game so that the game does not start until the user presses spacebar.
@@ -750,8 +731,8 @@ Requirements:
 Please update the relevant HTML/CSS/JS so the bonus game waits for spacebar before starting, and briefly summarize what you changed.
 
 ### Evaluation/Outcome
-Flappy game now waits for user to click start
-The rest of the functionality seems to have been preserved
+- Flappy game now waits for user to click start
+- The rest of the functionality seems to have been preserved
 
 ### Verification Performed
 - Lint run? pass
@@ -763,20 +744,20 @@ The rest of the functionality seems to have been preserved
 
 ## Entry 21
 
-**Date:** 2026-04-22
-**Time:** 13:19:04 -07:00
-**Feature / Task:** Change the flappy bird game to allow user to play at any time
-**Total Tokens Used:** 56559
-**Time Taken:** 2 min 30 sec
+* **Date:** 2026-04-22
+* **Time:** 13:19:04 -07:00
+* **Feature / Task:** Change the flappy bird game to allow user to play at any time
+* **Total Tokens Used:** 56,559
+* **Time Taken:** 2m 30s
 
 ### Objective
 Change the flappy bird game to allow user to play at any time
 
-### Prompt Used: Lets change the minigame format, we can keep the game the same but have it show up as a tab that you can press on at any time, still winning one token per column passed. At the end, a screen should also pop up detailing how many tokens you won with a little rumble animation.
+### Prompt Used
+Lets change the minigame format, we can keep the game the same but have it show up as a tab that you can press on at any time, still winning one token per column passed. At the end, a screen should also pop up detailing how many tokens you won with a little rumble animation.
 
-
-### Evaluation/Outcome: Changes are successful, but the tab is not formatted as we wanted and does not open/close, rather remains open. 
-
+### Evaluation/Outcome
+- Changes are successful, but the tab is not formatted as we wanted and does not open/close, rather remains open. 
 
 ### Verification Performed
 - Lint run? pass
@@ -786,40 +767,23 @@ Change the flappy bird game to allow user to play at any time
 ### Manual Edits?
 - No                   
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## Entry 22
 
-**Date:** 2026-04-21
-**Time:** 13:27:37 -07:00
-**Feature / Task:** Move the flappy bird game to a distinct tab similar to the other tabs, add a light mode function
-**Total Tokens Used:** 110924
-**Time Taken:** 4 min 29 sec
-
+* **Date:** 2026-04-21
+* **Time:** 13:27:37 -07:00
+* **Feature / Task:** Move the flappy bird game to a distinct tab similar to the other tabs, add a light mode function
+* **Total Tokens Used:** 110,924
+* **Time Taken:** 4m 29s
 
 ### Objective
 Move the flappy bird game to a distinct tab similar to the other tabs, add a light mode function
 
-### Prompt Used: Move the minigame into a tab similar to the shop, with a screen that opens up when you press on it. Title the mini game “FLAPPY BLOB” and have the tab be a red bar above the pay table. Finally create a toggle on the top between light and dark mode, with dark mode being how it currently is and light mode having a theme change. In light mode we want the theme to remain a retro theme, but with a sunset background and a red car driving through the background, maybe a couple of palm trees. Have the main colors be yellow, orange, red, and green in this theme,
-
+### Prompt Used
+Move the minigame into a tab similar to the shop, with a screen that opens up when you press on it. Title the mini game “FLAPPY BLOB” and have the tab be a red bar above the pay table. Finally create a toggle on the top between light and dark mode, with dark mode being how it currently is and light mode having a theme change. In light mode we want the theme to remain a retro theme, but with a sunset background and a red car driving through the background, maybe a couple of palm trees. Have the main colors be yellow, orange, red, and green in this theme,
 
 ### Evaluation/Outcome
-“Flappy blob” was moved to its own tab at the bottom of the slot machine as we wanted. Light mode toggle was also added at the top of the machine, although when enabled it was not what we desired. There were problems with the text when light mode was enabled, it was very hard to read.
+- “Flappy blob” was moved to its own tab at the bottom of the slot machine as we wanted. 
+- Light mode toggle was also added at the top of the machine, although when enabled it was not what we desired. There were problems with the text when light mode was enabled, it was very hard to read.
 
 ### Verification Performed
 - Lint run? pass
@@ -829,29 +793,23 @@ Move the flappy bird game to a distinct tab similar to the other tabs, add a lig
 ### Manual Edits?
 - No 
 
-
-
-
-
-
-
 ## Entry 23
 
-**Date:** 2026-04-21
-**Time:** 13:40:36 -07:00
-**Feature / Task:** Make small changes to “flappy blob” mini-game button and edit the light mode toggle so that text is more visible.
-**Total Tokens Used:** 108894
-**Time Taken:** 23 seconds
-
+* **Date:** 2026-04-21
+* **Time:** 13:40:36 -07:00
+* **Feature / Task:** Make small changes to “flappy blob” mini-game button and edit the light mode toggle so that text is more visible.
+* **Total Tokens Used:** 108,894
+* **Time Taken:** 23s
 
 ### Objective
 Make small changes to “flappy blob” mini-game button and edit the light mode toggle so that text is more visible.
 
-### Prompt Used: Change the title on the flappy blob tab to “FLAPPY BLOB MINI GAME - EARN TOKENS!!!”. Also, the text in the pay table is very hard to read in light mode as it has a grey background and the text is black, change that text and the emblems orange in the pay table tab. Also, in light mode lets replace the “SPACE AND BEYOND” game title with “MIAMI VICE”
-
+### Prompt Used
+Change the title on the flappy blob tab to “FLAPPY BLOB MINI GAME - EARN TOKENS!!!”. Also, the text in the pay table is very hard to read in light mode as it has a grey background and the text is black, change that text and the emblems orange in the pay table tab. Also, in light mode lets replace the “SPACE AND BEYOND” game title with “MIAMI VICE”
 
 ### Evaluation/Outcome
-Successful changes, text of flappy blob mini-game were made and background was changed to change text. We still had difficulties reading one button for adding or subtracting the bet value.
+- Successful changes, text of flappy blob mini-game were made and background was changed to change text. 
+- We still had difficulties reading one button for adding or subtracting the bet value.
 
 ### Verification Performed
 - Lint run? pass
@@ -861,24 +819,22 @@ Successful changes, text of flappy blob mini-game were made and background was c
 ### Manual Edits?
 - No 
 
-
-
 ## Entry 24
 
-**Date:** 2026-04-21
-**Time:** 13:48:00 -07:00
-**Feature / Task:** Make small changes to “bet size” text color. Fix shop text color.
-**Total Tokens Used:** 113221
-**Time Taken:** 16 seconds
-
+* **Date:** 2026-04-21
+* **Time:** 13:48:00 -07:00
+* **Feature / Task:** Make small changes to “bet size” text color. Fix shop text color.
+* **Total Tokens Used:** 113,221
+* **Time Taken:** 16s
 
 ### Objective
 Make small changes to “bet size” text color. Fix shop text color.
 
-### Prompt Used: Change the “+” and “-” text on the bet size button to be orange as well as changing the shop text which is highlighted in grey to be orange as well.
+### Prompt Used
+Change the “+” and “-” text on the bet size button to be orange as well as changing the shop text which is highlighted in grey to be orange as well.
 
 ### Evaluation/Outcome
-Did exactly the changes we wanted, the color of the text was changed which was easier to read.
+- Did exactly the changes we wanted, the color of the text was changed which was easier to read.
 
 ### Verification Performed
 - Lint run? pass
