@@ -126,6 +126,30 @@
         </div>
       </section>
 
+      <!-- Bonus Game -->
+      <section class="paytable_tab bonus_tab" aria-labelledby="bonus_title">
+        <button
+          class="paytable_tab_button"
+          id="bonus_toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="bonus_panel"
+        >
+          <span id="bonus_title">Bonus Game</span>
+          <span class="paytable_tab_icon bonus_tab_icon" aria-hidden="true">+</span>
+        </button>
+        <div class="paytable_tab_panel bonus_game_panel" id="bonus_panel" hidden>
+          <div class="paytable_rules">
+            <p>Start Orbit Run any time from this tab.</p>
+            <p>Each column you pass earns 1 token.</p>
+          </div>
+          <p id="flappy_prompt" class="bonus_game_prompt">Press Start, then Space or click to flap.</p>
+          <canvas id="flappy_canvas" width="620" height="320" aria-label="Flappy bonus game"></canvas>
+          <div class="flappy_bonus_readout">Bonus tokens: <strong id="flappy_bonus_tokens">0</strong></div>
+          <button class="bonus_start_button" id="bonus_start_button" type="button">Start Orbit Run</button>
+        </div>
+      </section>
+
     </main>
 
     <!-- Shop Modal -->
@@ -169,13 +193,20 @@
       </div>
     </div>
 
-    <!-- Flappy Bonus Modal -->
-    <div class="modal_overlay" id="flappy_modal" role="dialog" aria-modal="true" aria-labelledby="flappy_title" hidden>
-      <div class="modal_panel flappy_modal_panel">
-        <h2 id="flappy_title">Bonus Orbit Run</h2>
-        <p id="flappy_prompt">Press Space to Start</p>
-        <canvas id="flappy_canvas" width="620" height="320" aria-label="Flappy bonus game"></canvas>
-        <div class="flappy_bonus_readout">Bonus tokens: <strong id="flappy_bonus_tokens">0</strong></div>
+    <!-- Bonus Result Popup -->
+    <div
+      class="modal_overlay"
+      id="bonus_result_modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="bonus_result_title"
+      hidden
+    >
+      <div class="modal_panel bonus_result_panel">
+        <h2 id="bonus_result_title">Orbit Run Complete</h2>
+        <p>You earned:</p>
+        <div class="reward_amount" id="bonus_result_amount">0 tokens</div>
+        <button class="reward_continue_button" id="bonus_result_continue_button" type="button">Continue</button>
       </div>
     </div>
     </div>

@@ -13,7 +13,6 @@ const REEL_STOP_STAGGER_MS = 130;
 const AUTO_SPIN_COUNT = 5;
 const AUTO_SPIN_WIN_PAUSE_MS = 3000;
 const BOOST_SPIN_COUNT = 5;
-const BONUS_TRIGGER_DENOMINATOR = 30;
 const FLAPPY_GRAVITY = 0.34;
 const FLAPPY_FLAP_VELOCITY = -5.8;
 const FLAPPY_PIPE_SPEED = 2.8;
@@ -51,6 +50,12 @@ const elements = {
   autoSpinButton: document.querySelector("#auto_spin_button"),
   balance: document.querySelector("#balance"),
   bet: document.querySelector("#bet"),
+  bonusResultAmount: document.querySelector("#bonus_result_amount"),
+  bonusResultContinueButton: document.querySelector("#bonus_result_continue_button"),
+  bonusResultModal: document.querySelector("#bonus_result_modal"),
+  bonusStartButton: document.querySelector("#bonus_start_button"),
+  bonusTabPanel: document.querySelector("#bonus_panel"),
+  bonusTabToggle: document.querySelector("#bonus_toggle"),
   boostIndicator: document.querySelector("#boost_indicator"),
   boostIndicatorText: document.querySelector("#boost_indicator_text"),
   chestGrid: document.querySelector("#chest_grid"),
@@ -59,7 +64,6 @@ const elements = {
   decreaseBet: document.querySelector("#decrease_bet"),
   flappyBonusTokens: document.querySelector("#flappy_bonus_tokens"),
   flappyCanvas: document.querySelector("#flappy_canvas"),
-  flappyModal: document.querySelector("#flappy_modal"),
   flappyPrompt: document.querySelector("#flappy_prompt"),
   increaseBet: document.querySelector("#increase_bet"),
   paytableList: document.querySelector("#paytable_list"),
@@ -109,6 +113,9 @@ elements.decreaseBet.addEventListener("click", () => adjustBet(-1));
 elements.increaseBet.addEventListener("click", () => adjustBet(1));
 elements.bet.addEventListener("input", updateBetBounds);
 elements.paytableToggle.addEventListener("click", togglePaytable);
+elements.bonusTabToggle.addEventListener("click", toggleBonusTab);
+elements.bonusStartButton.addEventListener("click", startFlappyBonusRound);
+elements.bonusResultContinueButton.addEventListener("click", closeBonusResultModal);
 elements.rewardContinueButton.addEventListener("click", closeRewardModal);
 elements.shopToggle.addEventListener("click", openShopModal);
 elements.musicToggle.addEventListener("click", toggleMusic);
@@ -326,7 +333,6 @@ async function runSpin({ bet: requestedBet, announceResult = true, restoreContro
     }
     highlightWinningCells(outcome.wins);
     consumeBoostSpin();
-    await maybeRunFlappyBonus();
     return outcome;
   } catch (error) {
     state.balance = ledgerOutcome !== null ? ledgerOutcome.balance : startingBalance;
@@ -543,6 +549,67 @@ function togglePaytable() {
   elements.paytableToggle.setAttribute("aria-expanded", String(!expanded));
   elements.paytablePanel.hidden = expanded;
   elements.paytableToggle.querySelector(".paytable_tab_icon").textContent = expanded ? "+" : "-";
+}
+
+/**
+ * @returns {void}
+ */
+function toggleBonusTab() {
+  const expanded = elements.bonusTabToggle.getAttribute("aria-expanded") === "true";
+  elements.bonusTabToggle.setAttribute("aria-expanded", String(!expanded));
+  elements.bonusTabPanel.hidden = expanded;
+  elements.bonusTabToggle.querySelector(".bonus_tab_icon").textContent = expanded ? "+" : "-";
+}
+
+/**
+ * @returns {Promise<void>}
+ */
+async function startFlappyBonusRound() {
+  if (state.spinning || state.autoSpinning || state.chestOpen || state.bonusGameActive) {
+    return;
+  }
+
+  closeShopModal();
+  state.bonusGameActive = true;
+  setControlsEnabled(false);
+  elements.flappyBonusTokens.textContent = "0";
+  elements.flappyPrompt.textContent = "Press Space to Start";
+  setStatus("Bonus round: Orbit Run active.", "ready");
+
+  let earnedTokens = 0;
+  try {
+    earnedTokens = await runFlappyBonusRound();
+    state.balance += earnedTokens;
+  } finally {
+    state.bonusGameActive = false;
+    renderBalance();
+    updateBetBounds();
+    renderShop();
+    setControlsEnabled(state.balance >= MIN_BET && !state.chestOpen);
+  }
+
+  openBonusResultModal(earnedTokens);
+  if (earnedTokens > 0) {
+    setStatus(`Bonus round complete. Earned ${earnedTokens} tokens.`, "win");
+  } else {
+    setStatus("Bonus round complete. No bonus tokens earned.", "loss");
+  }
+}
+
+/**
+ * @param {number} earnedTokens Token reward from bonus run.
+ * @returns {void}
+ */
+function openBonusResultModal(earnedTokens) {
+  elements.bonusResultAmount.textContent = `${earnedTokens} tokens`;
+  elements.bonusResultModal.hidden = false;
+}
+
+/**
+ * @returns {void}
+ */
+function closeBonusResultModal() {
+  elements.bonusResultModal.hidden = true;
 }
 
 /**
@@ -778,6 +845,7 @@ function setControlsEnabled(enabled) {
   elements.bet.disabled = !nextEnabled;
   elements.shopToggle.disabled = !nextEnabled;
   elements.musicToggle.disabled = false;
+  elements.bonusStartButton.disabled = controlsLocked || state.spinning || state.autoSpinning;
   updateBetBounds();
   renderShop();
 }
@@ -808,54 +876,6 @@ function shuffleArray(items) {
   return items;
 }
 
-/**
- * @returns {boolean}
- */
-function shouldTriggerFlappyBonus() {
-  return Math.floor(Math.random() * BONUS_TRIGGER_DENOMINATOR) === 0;
-}
-
-/**
- * @returns {Promise<void>}
- */
-async function maybeRunFlappyBonus() {
-  if (state.chestOpen || state.balance < MIN_BET || state.bonusGameActive || !shouldTriggerFlappyBonus()) {
-    return;
-  }
-  if (!elements.flappyModal || !elements.flappyCanvas || !elements.flappyBonusTokens || !elements.flappyPrompt) {
-    return;
-  }
-
-  closeShopModal();
-  state.bonusGameActive = true;
-  setControlsEnabled(false);
-  elements.flappyBonusTokens.textContent = "0";
-  elements.flappyPrompt.textContent = "Press Space to Start";
-  elements.flappyModal.hidden = false;
-  setStatus("Bonus round: Orbit Run active.", "ready");
-
-  let earnedTokens = 0;
-  try {
-    earnedTokens = await runFlappyBonusRound();
-    state.balance += earnedTokens;
-  } finally {
-    elements.flappyModal.hidden = true;
-    state.bonusGameActive = false;
-    renderBalance();
-    updateBetBounds();
-    renderShop();
-  }
-
-  if (earnedTokens > 0) {
-    setStatus(`Bonus round complete. Earned ${earnedTokens} tokens.`, "win");
-  } else {
-    setStatus("Bonus round complete. No bonus tokens earned.", "loss");
-  }
-}
-
-/**
- * @returns {Promise<number>}
- */
 function runFlappyBonusRound() {
   const canvas = elements.flappyCanvas;
   const context = canvas.getContext("2d");
@@ -1332,5 +1352,4 @@ function createAudioFeedback() {
     { once: true }
   );
 });
-
 

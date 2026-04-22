@@ -518,10 +518,29 @@ input[type="number"]::-webkit-inner-spin-button,
     0 0 20px rgba(255, 61, 242, 0.15);
 }
 
+.bonus_tab:has(#bonus_panel:not([hidden])) .paytable_tab_button {
+  color: var(--ink);
+  background: linear-gradient(
+    120deg,
+    rgba(84, 255, 173, 0.22) 0%,
+    rgba(47, 248, 255, 0.18) 45%,
+    rgba(74, 168, 255, 0.2) 100%
+  );
+  box-shadow:
+    inset 0 0 20px rgba(84, 255, 173, 0.18),
+    0 0 20px rgba(47, 248, 255, 0.15);
+}
+
 .paytable_tab:has(#paytable_panel:not([hidden])) .paytable_tab_icon {
   border-color: rgba(255, 209, 102, 0.75);
   color: var(--amber);
   box-shadow: 0 0 12px rgba(255, 209, 102, 0.35);
+}
+
+.bonus_tab:has(#bonus_panel:not([hidden])) .bonus_tab_icon {
+  border-color: rgba(84, 255, 173, 0.8);
+  color: var(--green);
+  box-shadow: 0 0 12px rgba(84, 255, 173, 0.35);
 }
 
 .paytable_tab_button span:first-child {
@@ -716,7 +735,8 @@ input[type="number"]::-webkit-inner-spin-button,
 }
 
 #chest_modal,
-#reward_modal {
+#reward_modal,
+#bonus_result_modal {
   z-index: 35;
 }
 
@@ -799,6 +819,12 @@ input[type="number"]::-webkit-inner-spin-button,
   animation: reward-pop 0.72s cubic-bezier(0.2, 1.6, 0.34, 1);
 }
 
+.bonus_result_panel {
+  animation:
+    modal-pop 0.42s cubic-bezier(0.2, 1.4, 0.34, 1),
+    bonus-rumble 0.34s ease-in-out 0.46s 2;
+}
+
 .reward_amount {
   margin: 18px 0;
   color: var(--amber);
@@ -843,6 +869,36 @@ input[type="number"]::-webkit-inner-spin-button,
 .flappy_bonus_readout {
   color: var(--amber);
   text-transform: uppercase;
+}
+
+#bonus_panel {
+  display: grid;
+  gap: 12px;
+}
+
+.bonus_game_prompt {
+  margin: 0;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.bonus_start_button {
+  min-height: 44px;
+  border: 1px solid rgba(84, 255, 173, 0.78);
+  border-radius: 6px;
+  color: var(--ink);
+  background: linear-gradient(135deg, rgba(84, 255, 173, 0.24), rgba(47, 248, 255, 0.12));
+  text-transform: uppercase;
+}
+
+.bonus_start_button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 18px rgba(84, 255, 173, 0.35);
+}
+
+.bonus_start_button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .confetti {
@@ -963,6 +1019,21 @@ input[type="number"]::-webkit-inner-spin-button,
 @keyframes reward-glow {
   50% {
     transform: scale(1.04);
+  }
+}
+
+@keyframes bonus-rumble {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-3px);
+  }
+
+  75% {
+    transform: translateX(3px);
   }
 }
 
