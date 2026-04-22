@@ -142,22 +142,13 @@ async function handleAutoSpin() {
   const sessionStartBalance = state.balance;
   let completedSpins = 0;
 
-
   state.autoSpinStopRequested = false;
-
-  const autoSpinBet = getSanitizedBet();
   state.autoSpinning = true;
   setControlsEnabled(false);
-  setStatus("Auto spin…", "ready");
+  setStatus("Auto spin...", "ready");
 
   try {
     for (let count = 0; count < AUTO_SPIN_COUNT && state.balance >= MIN_BET; count += 1) {
-      const outcome = await runSpin({ restoreControls: false });
-
-      if (state.chestOpen) {
-        break;
-      }
-
       const outcome = await runSpin({ bet: autoSpinBet, restoreControls: false, announceResult: false });
 
       if (!outcome) {
@@ -166,17 +157,11 @@ async function handleAutoSpin() {
 
       completedSpins += 1;
 
-      if (state.chestOpen || state.balance < MIN_BET) {
+      if (state.chestOpen || state.balance < MIN_BET || state.autoSpinStopRequested) {
         break;
       }
 
-
-      if (state.autoSpinStopRequested) {
-        break;
-      }
-
-
-      if (outcome.payout > 0 && !state.chestOpen) {
+      if (outcome.payout > 0) {
         await delay(AUTO_SPIN_WIN_PAUSE_MS);
       }
     }
@@ -193,20 +178,21 @@ async function handleAutoSpin() {
 
     if (state.chestOpen && state.balance < MIN_BET) {
       setStatus(
-        `Auto session — ${completedSpins} ${spinWord}, ${formatNetTokens(net)}. Pick a chest to continue.`,
+        `Auto session - ${completedSpins} ${spinWord}, ${formatNetTokens(net)}. Pick a chest to continue.`,
         net > 0 ? "win" : net < 0 ? "loss" : "ready"
       );
-
     } else if (stopRequested) {
       setStatus(
-        `Auto spin stopped — ${completedSpins} ${spinWord}, ${formatNetTokens(net)}.`,
+        `Auto spin stopped - ${completedSpins} ${spinWord}, ${formatNetTokens(net)}.`,
         net > 0 ? "win" : net < 0 ? "loss" : "ready"
       );
-
     } else if (completedSpins > 0) {
-      setStatus(`Auto session — ${completedSpins} ${spinWord}, ${formatNetTokens(net)}.`, net > 0 ? "win" : net < 0 ? "loss" : "ready");
+      setStatus(
+        `Auto session - ${completedSpins} ${spinWord}, ${formatNetTokens(net)}.`,
+        net > 0 ? "win" : net < 0 ? "loss" : "ready"
+      );
     } else if (!state.chestOpen) {
-      setStatus("Auto spin did not run — need enough tokens for your current bet.", "ready");
+      setStatus("Auto spin did not run - need enough tokens for your current bet.", "ready");
     }
   }
 }
@@ -290,16 +276,16 @@ function closeShopModal() {
 /**
  * Runs one spin while keeping spin() as the permanent balance authority.
  *
- * @param {{ restoreControls?: boolean }} [options] Cleanup behavior.
+ * @param {{ bet?: number, announceResult?: boolean, restoreControls?: boolean }} [options] Spin behavior.
  * @returns {Promise<ReturnType<typeof spin> | undefined>}
  */
-async function runSpin({ restoreControls = true } = {}) {
+async function runSpin({ bet: requestedBet, announceResult = true, restoreControls = true } = {}) {
   if (state.spinning) {
     return undefined;
   }
 
   const startingBalance = state.balance;
-  const bet = getSanitizedBet();
+  const bet = requestedBet ?? getSanitizedBet();
   let outcome;
   /** Set once spin() and boost math succeed; used to distinguish rollback from a settled loss. */
   let ledgerOutcome = null;
@@ -1047,3 +1033,4 @@ function createAudioFeedback() {
     { once: true }
   );
 });
+
