@@ -60,6 +60,7 @@ const elements = {
   shopModal: document.querySelector("#shop_modal"),
   shopModalClose: document.querySelector("#shop_modal_close"),
   shopToggle: document.querySelector("#shop_toggle"),
+  musicToggle: document.querySelector("#music_toggle"),
   spinButton: document.querySelector("#spin_button"),
   status: document.querySelector("#status")
 };
@@ -73,12 +74,14 @@ const state = {
   boost: null,
   chestOpen: false,
   controlsEnabled: true,
+  musicEnabled: true,
   spinning: false
 };
 
 renderPaytable();
 renderShop();
 renderBoostIndicator();
+renderMusicToggle();
 renderBalance();
 updateBetBounds();
 background.start();
@@ -91,6 +94,7 @@ elements.bet.addEventListener("input", updateBetBounds);
 elements.paytableToggle.addEventListener("click", togglePaytable);
 elements.rewardContinueButton.addEventListener("click", closeRewardModal);
 elements.shopToggle.addEventListener("click", openShopModal);
+elements.musicToggle.addEventListener("click", toggleMusic);
 elements.shopModalClose.addEventListener("click", closeShopModal);
 elements.shopModal.addEventListener("click", (event) => {
   if (event.target === elements.shopModal) {
@@ -111,6 +115,7 @@ document.addEventListener("keydown", (event) => {
  */
 async function handleSpin(event) {
   event.preventDefault();
+  audio.ensureStarted();
 
   if (state.spinning || state.autoSpinning || state.chestOpen) {
     return;
@@ -125,6 +130,7 @@ async function handleSpin(event) {
  * @returns {Promise<void>}
  */
 async function handleAutoSpin() {
+  audio.ensureStarted();
   if (state.spinning || state.autoSpinning || state.chestOpen) {
     return;
   }
@@ -270,6 +276,7 @@ async function runSpin({ bet = getSanitizedBet(), restoreControls = true, announ
     clearWinningCells();
     setTemporaryBalance(Math.max(0, startingBalance - resolvedBet));
     setStatus("Spinning...", "ready");
+    audio.playSpin();
 
     await animateReels(outcome.reels);
 
@@ -381,7 +388,8 @@ function announceOutcome(outcome) {
   const statusType = isBigWin ? "big" : "win";
   const comboText = outcome.wins.length === 1 ? "1 combo" : `${outcome.wins.length} combos`;
 
-  audio.playHooray();
+  audio.playWinFx();
+  audio.playWinTriumph();
 
   if (isBigWin) {
     background.triggerWarp();
@@ -390,6 +398,9 @@ function announceOutcome(outcome) {
 
   background.triggerFireworks();
   launchConfetti();
+  if (isBigWin) {
+    window.setTimeout(() => launchConfetti(), 260);
+  }
   setStatus(`${comboText} pays ${outcome.payout} tokens.`, statusType);
 }
 
@@ -565,6 +576,24 @@ function renderBoostIndicator() {
 /**
  * @returns {void}
  */
+function toggleMusic() {
+  audio.ensureStarted();
+  state.musicEnabled = !state.musicEnabled;
+  audio.setEnabled(state.musicEnabled);
+  renderMusicToggle();
+}
+
+/**
+ * @returns {void}
+ */
+function renderMusicToggle() {
+  elements.musicToggle.setAttribute("aria-pressed", String(state.musicEnabled));
+  elements.musicToggle.textContent = state.musicEnabled ? "Music: On" : "Music: Off";
+}
+
+/**
+ * @returns {void}
+ */
 function openChestModal() {
   closeShopModal();
   state.chestOpen = true;
@@ -706,6 +735,7 @@ function setControlsEnabled(enabled) {
   elements.spinButton.disabled = !enabled;
   elements.bet.disabled = !enabled;
   elements.shopToggle.disabled = !enabled || shopLocked;
+  elements.musicToggle.disabled = false;
   updateBetBounds();
   renderShop();
 }
@@ -773,44 +803,220 @@ function getDisplayedBet() {
 /**
  * Creates compact Web Audio cues for wins, losses, and big wins.
  *
- * @returns {{ playHooray: () => void, playLoss: () => void, playBigWin: () => void }}
+ * @returns {{
+ *  ensureStarted: () => void,
+ *  setEnabled: (enabled: boolean) => void,
+ *  playHooray: () => void,
+ *  playLoss: () => void,
+ *  playBigWin: () => void,
+ *  playSpin: () => void,
+ *  playWinFx: () => void,
+ *  playWinTriumph: () => void
+ * }}
  */
 function createAudioFeedback() {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   let context;
+  let masterGain;
+  let masterConnected = false;
+  let musicStarted = false;
+  let enabled = true;
+  const MUSIC_STEP_SECONDS = 0.24;
+  const MUSIC_ARP_SEQUENCE = Object.freeze([
+    261.63, 392.0, 523.25, 783.99,
+    293.66, 440.0, 587.33, 880.0,
+    329.63, 493.88, 659.25, 987.77,
+    293.66, 440.0, 587.33, 783.99
+  ]);
+  const MUSIC_BASS_SEQUENCE = Object.freeze([
+    130.81, 146.83, 164.81, 146.83
+  ]);
+
+  /**
+   * @returns {AudioContext | null}
+   */
+  function getContext() {
+    if (!AudioContext) {
+      return null;
+    }
+
+    context ??= new AudioContext();
+    masterGain ??= context.createGain();
+    masterGain.gain.setValueAtTime(enabled ? 1 : 0, context.currentTime);
+    if (!masterConnected) {
+      masterGain.connect(context.destination);
+      masterConnected = true;
+    }
+    return context;
+  }
 
   /**
    * @param {number[]} frequencies Tone frequencies.
    * @param {number} duration Tone duration in seconds.
    * @param {OscillatorType} type Oscillator type.
+   * @param {number} gainPeak Peak gain for the envelope.
    * @returns {void}
    */
-  function play(frequencies, duration, type) {
-    if (!AudioContext) {
+  function play(frequencies, duration, type, gainPeak = 0.08) {
+    const activeContext = getContext();
+    if (!activeContext) {
       return;
     }
 
-    context ??= new AudioContext();
+    try {
+      if (activeContext.state !== "running") {
+        return;
+      }
 
-    frequencies.forEach((frequency, index) => {
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      const start = context.currentTime + index * duration * 0.82;
+      frequencies.forEach((frequency, index) => {
+        const oscillator = activeContext.createOscillator();
+        const gain = activeContext.createGain();
+        const start = activeContext.currentTime + index * duration * 0.82;
+
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, start);
+        gain.gain.setValueAtTime(0.001, start);
+        gain.gain.exponentialRampToValueAtTime(gainPeak, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+        oscillator.connect(gain).connect(masterGain);
+        oscillator.start(start);
+        oscillator.stop(start + duration + 0.02);
+      });
+    } catch {
+      // Audio should never block gameplay.
+    }
+  }
+
+  /**
+   * Plays a short sci-fi frequency sweep.
+   *
+   * @param {number} fromFrequency Start frequency.
+   * @param {number} toFrequency End frequency.
+   * @param {number} duration Sweep duration in seconds.
+   * @param {OscillatorType} type Oscillator type.
+   * @param {number} gainPeak Peak gain for the envelope.
+   * @returns {void}
+   */
+  function playSweep(fromFrequency, toFrequency, duration, type = "sawtooth", gainPeak = 0.06) {
+    const activeContext = getContext();
+    if (!activeContext) {
+      return;
+    }
+
+    try {
+      if (activeContext.state !== "running") {
+        return;
+      }
+
+      const oscillator = activeContext.createOscillator();
+      const gain = activeContext.createGain();
+      const start = activeContext.currentTime;
+      const end = start + duration;
 
       oscillator.type = type;
-      oscillator.frequency.setValueAtTime(frequency, start);
+      oscillator.frequency.setValueAtTime(fromFrequency, start);
+      oscillator.frequency.exponentialRampToValueAtTime(toFrequency, end);
       gain.gain.setValueAtTime(0.001, start);
-      gain.gain.exponentialRampToValueAtTime(0.08, start + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
-      oscillator.connect(gain).connect(context.destination);
+      gain.gain.exponentialRampToValueAtTime(gainPeak, start + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, end);
+      oscillator.connect(gain).connect(masterGain);
       oscillator.start(start);
-      oscillator.stop(start + duration + 0.02);
-    });
+      oscillator.stop(end + 0.02);
+    } catch {
+      // Audio should never block gameplay.
+    }
+  }
+
+  /**
+   * Starts a gentle looping tune after the first user interaction.
+   *
+   * @returns {void}
+   */
+  function ensureStarted() {
+    const activeContext = getContext();
+    if (!activeContext || musicStarted) {
+      return;
+    }
+
+    try {
+      if (activeContext.state === "suspended") {
+        activeContext.resume().catch(() => {});
+      }
+
+      musicStarted = true;
+      const cycleLengthMs = MUSIC_ARP_SEQUENCE.length * MUSIC_STEP_SECONDS * 1000;
+
+      const scheduleCycle = () => {
+        if (activeContext.state !== "running") {
+          return;
+        }
+
+        const cycleStart = activeContext.currentTime + 0.04;
+        MUSIC_ARP_SEQUENCE.forEach((frequency, stepIndex) => {
+          const start = cycleStart + stepIndex * MUSIC_STEP_SECONDS;
+          const end = start + MUSIC_STEP_SECONDS;
+          const arpOsc = activeContext.createOscillator();
+          const arpGain = activeContext.createGain();
+          arpOsc.type = "square";
+          arpOsc.frequency.setValueAtTime(frequency, start);
+          arpGain.gain.setValueAtTime(0.001, start);
+          arpGain.gain.exponentialRampToValueAtTime(0.038, start + 0.025);
+          arpGain.gain.exponentialRampToValueAtTime(0.001, end);
+          arpOsc.connect(arpGain).connect(masterGain);
+          arpOsc.start(start);
+          arpOsc.stop(end + 0.01);
+        });
+
+        MUSIC_BASS_SEQUENCE.forEach((frequency, stepIndex) => {
+          const start = cycleStart + stepIndex * MUSIC_STEP_SECONDS * 4;
+          const end = start + MUSIC_STEP_SECONDS * 4;
+          const bassOsc = activeContext.createOscillator();
+          const bassGain = activeContext.createGain();
+          bassOsc.type = "sine";
+          bassOsc.frequency.setValueAtTime(frequency, start);
+          bassGain.gain.setValueAtTime(0.001, start);
+          bassGain.gain.exponentialRampToValueAtTime(0.028, start + 0.06);
+          bassGain.gain.exponentialRampToValueAtTime(0.001, end);
+          bassOsc.connect(bassGain).connect(masterGain);
+          bassOsc.start(start);
+          bassOsc.stop(end + 0.01);
+        });
+      };
+
+      scheduleCycle();
+      window.setInterval(scheduleCycle, cycleLengthMs);
+    } catch {
+      // Audio should never block gameplay.
+      musicStarted = false;
+    }
   }
 
   return {
+    ensureStarted,
+    setEnabled: (nextEnabled) => {
+      enabled = Boolean(nextEnabled);
+      const activeContext = getContext();
+      if (!activeContext) {
+        return;
+      }
+
+      masterGain.gain.setValueAtTime(enabled ? 1 : 0, activeContext.currentTime);
+    },
     playHooray: () => play([523, 659, 784, 1046], 0.12, "square"),
     playLoss: () => play([220, 146], 0.16, "sawtooth"),
-    playBigWin: () => play([392, 523, 659, 784, 1046], 0.11, "square")
+    playBigWin: () => play([392, 523, 659, 784, 1046, 1174], 0.13, "square", 0.1),
+    playSpin: () => play([220, 260, 300, 340, 380], 0.09, "sawtooth", 0.05),
+    playWinFx: () => playSweep(420, 1320, 0.22, "sawtooth", 0.065),
+    playWinTriumph: () => play([523, 659, 784, 1046, 1318], 0.14, "triangle", 0.095)
   };
 }
+
+["pointerdown", "keydown"].forEach((eventName) => {
+  window.addEventListener(
+    eventName,
+    () => {
+      audio.ensureStarted();
+    },
+    { once: true }
+  );
+});
