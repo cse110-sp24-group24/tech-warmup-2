@@ -13,6 +13,15 @@ const REEL_STOP_STAGGER_MS = 130;
 const AUTO_SPIN_COUNT = 5;
 const AUTO_SPIN_WIN_PAUSE_MS = 3000;
 const BOOST_SPIN_COUNT = 5;
+const BONUS_TRIGGER_DENOMINATOR = 30;
+const FLAPPY_GRAVITY = 0.34;
+const FLAPPY_FLAP_VELOCITY = -5.8;
+const FLAPPY_PIPE_SPEED = 2.8;
+const FLAPPY_PIPE_WIDTH = 72;
+const FLAPPY_PIPE_GAP = 122;
+const FLAPPY_PIPE_SPACING = 212;
+const FLAPPY_BIRD_X_RATIO = 0.3;
+const FLAPPY_BIRD_RADIUS = 11;
 const CONFETTI_COLORS = Object.freeze(["#2ff8ff", "#ff3df2", "#9b5cff", "#ffd166", "#54ffad"]);
 const CHEST_REWARDS = Object.freeze([50, 500, 0]);
 const SHOP_ITEMS = Object.freeze([
@@ -48,6 +57,9 @@ const elements = {
   chestModal: document.querySelector("#chest_modal"),
   controls: document.querySelector("#controls"),
   decreaseBet: document.querySelector("#decrease_bet"),
+  flappyBonusTokens: document.querySelector("#flappy_bonus_tokens"),
+  flappyCanvas: document.querySelector("#flappy_canvas"),
+  flappyModal: document.querySelector("#flappy_modal"),
   increaseBet: document.querySelector("#increase_bet"),
   paytableList: document.querySelector("#paytable_list"),
   paytablePanel: document.querySelector("#paytable_panel"),
@@ -73,6 +85,7 @@ const state = {
   autoSpinStopRequested: false,
   autoSpinning: false,
   balance: INITIAL_BALANCE,
+  bonusGameActive: false,
   boost: null,
   chestOpen: false,
   controlsEnabled: true,
@@ -120,7 +133,7 @@ async function handleSpin(event) {
   event.preventDefault();
   audio.ensureStarted();
 
-  if (state.spinning || state.autoSpinning || state.chestOpen) {
+  if (state.spinning || state.autoSpinning || state.chestOpen || state.bonusGameActive) {
     return;
   }
 
@@ -134,7 +147,7 @@ async function handleSpin(event) {
  */
 async function handleAutoSpin() {
   audio.ensureStarted();
-  if (state.spinning || state.autoSpinning || state.chestOpen) {
+  if (state.spinning || state.autoSpinning || state.chestOpen || state.bonusGameActive) {
     return;
   }
 
@@ -253,7 +266,7 @@ function resolveSpinBet(rawBet, balance) {
  * @returns {void}
  */
 function openShopModal() {
-  if (state.chestOpen || state.spinning || state.autoSpinning) {
+  if (state.chestOpen || state.spinning || state.autoSpinning || state.bonusGameActive) {
     return;
   }
 
@@ -312,6 +325,7 @@ async function runSpin({ bet: requestedBet, announceResult = true, restoreContro
     }
     highlightWinningCells(outcome.wins);
     consumeBoostSpin();
+    await maybeRunFlappyBonus();
     return outcome;
   } catch (error) {
     state.balance = ledgerOutcome !== null ? ledgerOutcome.balance : startingBalance;
@@ -550,6 +564,7 @@ function renderShop() {
       Boolean(state.boost) ||
       state.spinning ||
       state.autoSpinning ||
+      state.bonusGameActive ||
       state.chestOpen;
     button.addEventListener("click", () => buyBoost(item));
 
@@ -565,7 +580,7 @@ function renderShop() {
  * @returns {void}
  */
 function buyBoost(item) {
-  if (state.balance < item.cost || state.boost || state.spinning || state.autoSpinning || state.chestOpen) {
+  if (state.balance < item.cost || state.boost || state.spinning || state.autoSpinning || state.chestOpen || state.bonusGameActive) {
     return;
   }
 
@@ -754,12 +769,13 @@ function getCurrentMaxBet() {
  */
 function setControlsEnabled(enabled) {
   state.controlsEnabled = enabled;
-  const shopLocked = state.chestOpen;
-  elements.autoSpinButton.disabled = !enabled;
-  elements.spinButton.disabled = !enabled;
+  const controlsLocked = state.chestOpen || state.bonusGameActive;
+  const nextEnabled = enabled && !controlsLocked;
+  elements.autoSpinButton.disabled = !nextEnabled;
+  elements.spinButton.disabled = !nextEnabled;
   elements.stopButton.disabled = !state.autoSpinning;
-  elements.bet.disabled = !enabled;
-  elements.shopToggle.disabled = !enabled || shopLocked;
+  elements.bet.disabled = !nextEnabled;
+  elements.shopToggle.disabled = !nextEnabled;
   elements.musicToggle.disabled = false;
   updateBetBounds();
   renderShop();
@@ -789,6 +805,235 @@ function shuffleArray(items) {
   }
 
   return items;
+}
+
+/**
+ * @returns {boolean}
+ */
+function shouldTriggerFlappyBonus() {
+  return Math.floor(Math.random() * BONUS_TRIGGER_DENOMINATOR) === 0;
+}
+
+/**
+ * @returns {Promise<void>}
+ */
+async function maybeRunFlappyBonus() {
+  if (state.chestOpen || state.balance < MIN_BET || state.bonusGameActive || !shouldTriggerFlappyBonus()) {
+    return;
+  }
+  if (!elements.flappyModal || !elements.flappyCanvas || !elements.flappyBonusTokens) {
+    return;
+  }
+
+  closeShopModal();
+  state.bonusGameActive = true;
+  setControlsEnabled(false);
+  elements.flappyBonusTokens.textContent = "0";
+  elements.flappyModal.hidden = false;
+  setStatus("Bonus round: Orbit Run active.", "ready");
+
+  let earnedTokens = 0;
+  try {
+    earnedTokens = await runFlappyBonusRound();
+    state.balance += earnedTokens;
+  } finally {
+    elements.flappyModal.hidden = true;
+    state.bonusGameActive = false;
+    renderBalance();
+    updateBetBounds();
+    renderShop();
+  }
+
+  if (earnedTokens > 0) {
+    setStatus(`Bonus round complete. Earned ${earnedTokens} tokens.`, "win");
+  } else {
+    setStatus("Bonus round complete. No bonus tokens earned.", "loss");
+  }
+}
+
+/**
+ * @returns {Promise<number>}
+ */
+function runFlappyBonusRound() {
+  const canvas = elements.flappyCanvas;
+  const context = canvas.getContext("2d");
+  if (!context) {
+    return Promise.resolve(0);
+  }
+  const width = canvas.width;
+  const height = canvas.height;
+  const birdX = width * FLAPPY_BIRD_X_RATIO;
+  const floorHeight = 20;
+  const minGapY = 54;
+  const maxGapY = height - floorHeight - 54 - FLAPPY_PIPE_GAP;
+  const glowColor = "rgba(47, 248, 255, 0.85)";
+  const pipeColor = "rgba(84, 255, 173, 0.95)";
+  const dangerColor = "rgba(255, 94, 122, 0.92)";
+  let birdY = height * 0.45;
+  let birdVelocity = 0;
+  let score = 0;
+  let frameHandle = 0;
+  let ended = false;
+  let spawnAccumulator = 0;
+  /** @type {Array<{ x: number, gapTop: number, scored: boolean }>} */
+  let pipes = [];
+
+  const flap = () => {
+    birdVelocity = FLAPPY_FLAP_VELOCITY;
+  };
+
+  const onCanvasPointerDown = (event) => {
+    event.preventDefault();
+    flap();
+  };
+
+  const onWindowKeyDown = (event) => {
+    if (!state.bonusGameActive || event.code !== "Space") {
+      return;
+    }
+    event.preventDefault();
+    flap();
+  };
+
+  /**
+   * @returns {void}
+   */
+  function spawnPipe() {
+    const gapTop = minGapY + Math.random() * Math.max(1, maxGapY - minGapY);
+    pipes.push({
+      x: width + FLAPPY_PIPE_WIDTH,
+      gapTop,
+      scored: false
+    });
+  }
+
+  /**
+   * @returns {void}
+   */
+  function drawFrame() {
+    context.clearRect(0, 0, width, height);
+
+    const sky = context.createLinearGradient(0, 0, 0, height);
+    sky.addColorStop(0, "rgba(74, 168, 255, 0.2)");
+    sky.addColorStop(1, "rgba(12, 6, 28, 0.85)");
+    context.fillStyle = sky;
+    context.fillRect(0, 0, width, height);
+
+    context.fillStyle = "rgba(255, 209, 102, 0.2)";
+    context.fillRect(0, height - floorHeight, width, floorHeight);
+
+    pipes.forEach((pipe) => {
+      context.fillStyle = pipeColor;
+      context.fillRect(pipe.x, 0, FLAPPY_PIPE_WIDTH, pipe.gapTop);
+      context.fillRect(
+        pipe.x,
+        pipe.gapTop + FLAPPY_PIPE_GAP,
+        FLAPPY_PIPE_WIDTH,
+        height - floorHeight - (pipe.gapTop + FLAPPY_PIPE_GAP)
+      );
+    });
+
+    context.beginPath();
+    context.arc(birdX, birdY, FLAPPY_BIRD_RADIUS, 0, Math.PI * 2);
+    context.fillStyle = dangerColor;
+    context.shadowColor = glowColor;
+    context.shadowBlur = 12;
+    context.fill();
+    context.shadowBlur = 0;
+
+    context.fillStyle = "rgba(248, 251, 255, 0.92)";
+    context.font = "bold 20px 'Courier New', monospace";
+    context.fillText(`Bonus: ${score}`, 14, 28);
+  }
+
+  /**
+   * @returns {boolean}
+   */
+  function collides() {
+    if (birdY - FLAPPY_BIRD_RADIUS <= 0 || birdY + FLAPPY_BIRD_RADIUS >= height - floorHeight) {
+      return true;
+    }
+
+    return pipes.some((pipe) => {
+      const insidePipeX = birdX + FLAPPY_BIRD_RADIUS > pipe.x && birdX - FLAPPY_BIRD_RADIUS < pipe.x + FLAPPY_PIPE_WIDTH;
+      if (!insidePipeX) {
+        return false;
+      }
+
+      const aboveGap = birdY - FLAPPY_BIRD_RADIUS < pipe.gapTop;
+      const belowGap = birdY + FLAPPY_BIRD_RADIUS > pipe.gapTop + FLAPPY_PIPE_GAP;
+      return aboveGap || belowGap;
+    });
+  }
+
+  /**
+   * @returns {number}
+   */
+  function step() {
+    birdVelocity += FLAPPY_GRAVITY;
+    birdY += birdVelocity;
+
+    spawnAccumulator += FLAPPY_PIPE_SPEED;
+    if (spawnAccumulator >= FLAPPY_PIPE_SPACING) {
+      spawnAccumulator = 0;
+      spawnPipe();
+    }
+
+    pipes = pipes
+      .map((pipe) => ({ ...pipe, x: pipe.x - FLAPPY_PIPE_SPEED }))
+      .filter((pipe) => pipe.x + FLAPPY_PIPE_WIDTH > -2);
+
+    pipes.forEach((pipe) => {
+      if (!pipe.scored && pipe.x + FLAPPY_PIPE_WIDTH < birdX - FLAPPY_BIRD_RADIUS) {
+        pipe.scored = true;
+        score += 1;
+        elements.flappyBonusTokens.textContent = String(score);
+      }
+    });
+
+    drawFrame();
+    return score;
+  }
+
+  /**
+   * @param {(score: number) => void} resolve Resolves with earned tokens.
+   * @returns {void}
+   */
+  function finish(resolve) {
+    if (ended) {
+      return;
+    }
+
+    ended = true;
+    window.cancelAnimationFrame(frameHandle);
+    canvas.removeEventListener("pointerdown", onCanvasPointerDown);
+    window.removeEventListener("keydown", onWindowKeyDown);
+    resolve(score);
+  }
+
+  spawnPipe();
+  drawFrame();
+  canvas.addEventListener("pointerdown", onCanvasPointerDown);
+  window.addEventListener("keydown", onWindowKeyDown);
+
+  return new Promise((resolve) => {
+    const loop = () => {
+      if (ended || !state.bonusGameActive) {
+        finish(resolve);
+        return;
+      }
+
+      step();
+      if (collides()) {
+        finish(resolve);
+        return;
+      }
+
+      frameHandle = window.requestAnimationFrame(loop);
+    };
+
+    frameHandle = window.requestAnimationFrame(loop);
+  });
 }
 
 /**
@@ -1033,4 +1278,5 @@ function createAudioFeedback() {
     { once: true }
   );
 });
+
 
