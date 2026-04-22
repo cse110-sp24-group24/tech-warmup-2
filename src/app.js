@@ -1,6 +1,7 @@
 import {
   BIG_WIN_MULTIPLIER,
   INITIAL_BALANCE,
+  MAX_BET,
   MIN_BET,
   PAYTABLE,
   spin
@@ -16,7 +17,8 @@ const CONFETTI_COLORS = Object.freeze(["#2ff8ff", "#ff3df2", "#9b5cff", "#ffd166
 const CHEST_REWARDS = Object.freeze([50, 500, 0]);
 const SHOP_ITEMS = Object.freeze([
   { id: "boost_2x", label: "2x Payout Boost", multiplier: 2, cost: 75 },
-  { id: "boost_3x", label: "3x Payout Boost", multiplier: 3, cost: 180 }
+  { id: "boost_3x", label: "3x Payout Boost", multiplier: 3, cost: 180 },
+  { id: "boost_4x", label: "4x Payout Boost", multiplier: 4, cost: 320 }
 ]);
 const SYMBOL_EMBLEMS = Object.freeze({
   "7": "7",
@@ -41,6 +43,7 @@ const elements = {
   balance: document.querySelector("#balance"),
   bet: document.querySelector("#bet"),
   boostIndicator: document.querySelector("#boost_indicator"),
+  boostIndicatorText: document.querySelector("#boost_indicator_text"),
   chestGrid: document.querySelector("#chest_grid"),
   chestModal: document.querySelector("#chest_modal"),
   controls: document.querySelector("#controls"),
@@ -53,7 +56,12 @@ const elements = {
   rewardAmount: document.querySelector("#reward_amount"),
   rewardContinueButton: document.querySelector("#reward_continue_button"),
   rewardModal: document.querySelector("#reward_modal"),
+  stopButton: document.querySelector("#stop_button"),
   shopItems: document.querySelector("#shop_items"),
+  shopModal: document.querySelector("#shop_modal"),
+  shopModalClose: document.querySelector("#shop_modal_close"),
+  shopToggle: document.querySelector("#shop_toggle"),
+  musicToggle: document.querySelector("#music_toggle"),
   spinButton: document.querySelector("#spin_button"),
   status: document.querySelector("#status")
 };
@@ -62,28 +70,45 @@ const background = new RetroSpaceBackground(document.querySelector("#space_backg
 const audio = createAudioFeedback();
 
 const state = {
+  autoSpinStopRequested: false,
   autoSpinning: false,
   balance: INITIAL_BALANCE,
   boost: null,
   chestOpen: false,
   controlsEnabled: true,
+  musicEnabled: true,
   spinning: false
 };
 
 renderPaytable();
 renderShop();
 renderBoostIndicator();
+renderMusicToggle();
 renderBalance();
 updateBetBounds();
 background.start();
 
 elements.controls.addEventListener("submit", handleSpin);
 elements.autoSpinButton.addEventListener("click", handleAutoSpin);
+elements.stopButton.addEventListener("click", handleStopAutoSpin);
 elements.decreaseBet.addEventListener("click", () => adjustBet(-1));
 elements.increaseBet.addEventListener("click", () => adjustBet(1));
 elements.bet.addEventListener("input", updateBetBounds);
 elements.paytableToggle.addEventListener("click", togglePaytable);
 elements.rewardContinueButton.addEventListener("click", closeRewardModal);
+elements.shopToggle.addEventListener("click", openShopModal);
+elements.musicToggle.addEventListener("click", toggleMusic);
+elements.shopModalClose.addEventListener("click", closeShopModal);
+elements.shopModal.addEventListener("click", (event) => {
+  if (event.target === elements.shopModal) {
+    closeShopModal();
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !elements.shopModal.hidden) {
+    closeShopModal();
+  }
+});
 
 /**
  * Handles one complete spin, with the result computed before animation starts.
@@ -93,8 +118,9 @@ elements.rewardContinueButton.addEventListener("click", closeRewardModal);
  */
 async function handleSpin(event) {
   event.preventDefault();
+  audio.ensureStarted();
 
-  if (state.spinning || state.autoSpinning) {
+  if (state.spinning || state.autoSpinning || state.chestOpen) {
     return;
   }
 
@@ -107,18 +133,31 @@ async function handleSpin(event) {
  * @returns {Promise<void>}
  */
 async function handleAutoSpin() {
-  if (state.spinning || state.autoSpinning) {
+  audio.ensureStarted();
+  if (state.spinning || state.autoSpinning || state.chestOpen) {
     return;
   }
 
   const autoSpinBet = getSanitizedBet();
+  const sessionStartBalance = state.balance;
+  let completedSpins = 0;
+
+  state.autoSpinStopRequested = false;
   state.autoSpinning = true;
   setControlsEnabled(false);
+  setStatus("Auto spin…", "ready");
 
   try {
-    let completedSpins = 0;
-    while (completedSpins < AUTO_SPIN_COUNT && state.balance >= autoSpinBet) {
-      const outcome = await runSpin({ bet: autoSpinBet, restoreControls: false });
+    while (
+      completedSpins < AUTO_SPIN_COUNT &&
+      state.balance >= autoSpinBet &&
+      !state.autoSpinStopRequested
+    ) {
+      if (state.chestOpen) {
+        break;
+      }
+
+      const outcome = await runSpin({ bet: autoSpinBet, restoreControls: false, announceResult: false });
 
       if (!outcome) {
         break;
@@ -126,56 +165,166 @@ async function handleAutoSpin() {
 
       completedSpins += 1;
 
-      if (state.balance < MIN_BET) {
+      if (state.chestOpen || state.balance < MIN_BET) {
         break;
       }
 
-      if (outcome?.payout > 0) {
+      if (state.autoSpinStopRequested) {
+        break;
+      }
+
+      if (outcome.payout > 0 && !state.chestOpen) {
         await delay(AUTO_SPIN_WIN_PAUSE_MS);
       }
     }
   } finally {
     state.autoSpinning = false;
+    const stopRequested = state.autoSpinStopRequested;
+    state.autoSpinStopRequested = false;
     state.spinning = false;
     updateBetBounds();
     setControlsEnabled(state.balance >= MIN_BET && !state.chestOpen);
+
+    const net = state.balance - sessionStartBalance;
+    const spinWord = completedSpins === 1 ? "spin" : "spins";
+
+    if (state.chestOpen && state.balance < MIN_BET) {
+      setStatus(
+        `Auto session — ${completedSpins} ${spinWord}, ${formatNetTokens(net)}. Pick a chest to continue.`,
+        net > 0 ? "win" : net < 0 ? "loss" : "ready"
+      );
+    } else if (stopRequested) {
+      setStatus(
+        `Auto spin stopped — ${completedSpins} ${spinWord}, ${formatNetTokens(net)}.`,
+        net > 0 ? "win" : net < 0 ? "loss" : "ready"
+      );
+    } else if (completedSpins > 0) {
+      setStatus(`Auto session — ${completedSpins} ${spinWord}, ${formatNetTokens(net)}.`, net > 0 ? "win" : net < 0 ? "loss" : "ready");
+    } else if (!state.chestOpen) {
+      setStatus("Auto spin did not run — need enough tokens for your current bet.", "ready");
+    }
   }
+}
+
+/**
+ * Requests auto-spin to stop after the current spin finishes.
+ *
+ * @returns {void}
+ */
+function handleStopAutoSpin() {
+  if (!state.autoSpinning) {
+    return;
+  }
+
+  state.autoSpinStopRequested = true;
+  setStatus("Stopping auto spin after current spin...", "ready");
+}
+
+/**
+ * @param {number} delta End balance minus start balance for a session.
+ * @returns {string}
+ */
+function formatNetTokens(delta) {
+  if (delta > 0) {
+    return `up ${delta} tokens`;
+  }
+
+  if (delta < 0) {
+    return `down ${-delta} tokens`;
+  }
+
+  return "no net change";
+}
+
+/**
+ * Clamps a requested bet to legal integer bounds for the current balance.
+ *
+ * @param {number} rawBet Requested bet (may be from input or auto-spin).
+ * @param {number} balance Balance before the spin.
+ * @returns {number}
+ */
+function resolveSpinBet(rawBet, balance) {
+  const affordableMax = Math.min(MAX_BET, balance);
+  const upper = Math.max(MIN_BET, affordableMax);
+  const parsed = Number.isInteger(rawBet) ? rawBet : Math.trunc(Number(rawBet));
+  if (!Number.isFinite(parsed)) {
+    throw new RangeError("Bet must be a whole number.");
+  }
+
+  return clamp(parsed, MIN_BET, upper);
+}
+
+/**
+ * Opens the shop modal when gameplay allows it.
+ *
+ * @returns {void}
+ */
+function openShopModal() {
+  if (state.chestOpen || state.spinning || state.autoSpinning) {
+    return;
+  }
+
+  elements.shopModal.hidden = false;
+  document.body.style.overflow = "hidden";
+  renderShop();
+  elements.shopModalClose.focus();
+}
+
+/**
+ * Closes the shop modal and restores page scroll.
+ *
+ * @returns {void}
+ */
+function closeShopModal() {
+  elements.shopModal.hidden = true;
+  document.body.style.overflow = "";
 }
 
 /**
  * Runs one spin while keeping spin() as the permanent balance authority.
  *
- * @param {{ bet?: number, restoreControls?: boolean }} [options] Cleanup behavior.
+ * @param {{ bet?: number, restoreControls?: boolean, announceResult?: boolean }} [options] Cleanup behavior.
  * @returns {Promise<ReturnType<typeof spin> | undefined>}
  */
-async function runSpin({ bet = getSanitizedBet(), restoreControls = true } = {}) {
+async function runSpin({ bet = getSanitizedBet(), restoreControls = true, announceResult = true } = {}) {
   if (state.spinning) {
     return undefined;
   }
 
   const startingBalance = state.balance;
+  /** @type {ReturnType<typeof spin> | undefined} */
   let outcome;
+  /** Set once spin() and boost math succeed; used to distinguish rollback from a settled loss. */
+  let ledgerOutcome = null;
 
   state.spinning = true;
   setControlsEnabled(false);
 
   try {
-    outcome = spin({ balance: startingBalance, bet });
+    const resolvedBet = resolveSpinBet(bet, startingBalance);
+    outcome = spin({ balance: startingBalance, bet: resolvedBet });
+    ledgerOutcome = outcome;
     outcome = applyBoostToOutcome(outcome);
+    ledgerOutcome = outcome;
     clearWinningCells();
-    setTemporaryBalance(Math.max(0, startingBalance - bet));
+    setTemporaryBalance(Math.max(0, startingBalance - resolvedBet));
     setStatus("Spinning...", "ready");
+    audio.playSpin();
 
     await animateReels(outcome.reels);
 
     state.balance = outcome.balance;
-    announceOutcome(outcome);
+    if (announceResult) {
+      announceOutcome(outcome);
+    }
     highlightWinningCells(outcome.wins);
     consumeBoostSpin();
     return outcome;
   } catch (error) {
-    state.balance = outcome?.balance ?? startingBalance;
-    setStatus(error.message, "loss");
+    state.balance = ledgerOutcome !== null ? ledgerOutcome.balance : startingBalance;
+    if (announceResult && !state.autoSpinning) {
+      setStatus(error.message, "loss");
+    }
     return outcome;
   } finally {
     state.spinning = false;
@@ -264,7 +413,7 @@ function highlightWinningCells(wins) {
 function announceOutcome(outcome) {
   if (outcome.payout === 0) {
     audio.playLoss();
-    setStatus(`No match. Lost ${outcome.bet} tokens.`, outcome.gameOver ? "loss" : "loss");
+    setStatus(`No match. Lost ${outcome.bet} tokens.`, "loss");
     return;
   }
 
@@ -272,7 +421,8 @@ function announceOutcome(outcome) {
   const statusType = isBigWin ? "big" : "win";
   const comboText = outcome.wins.length === 1 ? "1 combo" : `${outcome.wins.length} combos`;
 
-  audio.playHooray();
+  audio.playWinFx();
+  audio.playWinTriumph();
 
   if (isBigWin) {
     background.triggerWarp();
@@ -281,6 +431,9 @@ function announceOutcome(outcome) {
 
   background.triggerFireworks();
   launchConfetti();
+  if (isBigWin) {
+    window.setTimeout(() => launchConfetti(), 260);
+  }
   setStatus(`${comboText} pays ${outcome.payout} tokens.`, statusType);
 }
 
@@ -399,7 +552,12 @@ function renderShop() {
     button.className = "shop_buy_button";
     button.type = "button";
     button.textContent = "Buy";
-    button.disabled = state.balance < item.cost || Boolean(state.boost) || state.spinning || state.autoSpinning;
+    button.disabled =
+      state.balance < item.cost ||
+      Boolean(state.boost) ||
+      state.spinning ||
+      state.autoSpinning ||
+      state.chestOpen;
     button.addEventListener("click", () => buyBoost(item));
 
     row.append(copy, button);
@@ -414,7 +572,7 @@ function renderShop() {
  * @returns {void}
  */
 function buyBoost(item) {
-  if (state.balance < item.cost || state.boost || state.spinning || state.autoSpinning) {
+  if (state.balance < item.cost || state.boost || state.spinning || state.autoSpinning || state.chestOpen) {
     return;
   }
 
@@ -440,18 +598,37 @@ function buyBoost(item) {
 function renderBoostIndicator() {
   if (!state.boost) {
     elements.boostIndicator.hidden = true;
-    elements.boostIndicator.textContent = "";
+    elements.boostIndicatorText.textContent = "";
     return;
   }
 
   elements.boostIndicator.hidden = false;
-  elements.boostIndicator.textContent = `◆ Payout boost active · ${state.boost.spinsRemaining}`;
+  elements.boostIndicatorText.textContent = `Payout boost active · ${state.boost.spinsRemaining} spins left`;
+}
+
+/**
+ * @returns {void}
+ */
+function toggleMusic() {
+  audio.ensureStarted();
+  state.musicEnabled = !state.musicEnabled;
+  audio.setEnabled(state.musicEnabled);
+  renderMusicToggle();
+}
+
+/**
+ * @returns {void}
+ */
+function renderMusicToggle() {
+  elements.musicToggle.setAttribute("aria-pressed", String(state.musicEnabled));
+  elements.musicToggle.textContent = state.musicEnabled ? "Music: On" : "Music: Off";
 }
 
 /**
  * @returns {void}
  */
 function openChestModal() {
+  closeShopModal();
   state.chestOpen = true;
   setControlsEnabled(false);
   elements.chestModal.hidden = false;
@@ -541,7 +718,8 @@ function setStatus(message, type) {
  */
 function adjustBet(delta) {
   const currentBet = getSanitizedBet();
-  elements.bet.value = String(clamp(currentBet + delta, MIN_BET, getCurrentMaxBet()));
+  const maxBet = getCurrentMaxBet();
+  elements.bet.value = String(clamp(currentBet + delta, MIN_BET, maxBet));
   updateBetBounds();
 }
 
@@ -549,8 +727,10 @@ function adjustBet(delta) {
  * @returns {number}
  */
 function getSanitizedBet() {
+  const maxBet = getCurrentMaxBet();
   const parsedBet = Number.parseInt(elements.bet.value, 10);
-  return clamp(Number.isNaN(parsedBet) ? MIN_BET : parsedBet, MIN_BET, getCurrentMaxBet());
+  const base = Number.isNaN(parsedBet) ? MIN_BET : parsedBet;
+  return clamp(base, MIN_BET, maxBet);
 }
 
 /**
@@ -561,12 +741,12 @@ function updateBetBounds() {
   const controlsDisabled = state.spinning || !state.controlsEnabled;
   const typedBet = Number.parseInt(elements.bet.value, 10);
 
-  elements.bet.min = "0";
-  elements.bet.max = String(maxBet);
-  if (elements.bet.value !== "" && !Number.isNaN(typedBet) && typedBet > maxBet) {
-    elements.bet.value = String(maxBet);
+  elements.bet.min = String(MIN_BET);
+  elements.bet.max = String(Math.max(MIN_BET, maxBet));
+  if (elements.bet.value !== "" && !Number.isNaN(typedBet)) {
+    elements.bet.value = String(clamp(typedBet, MIN_BET, maxBet));
   }
-  elements.decreaseBet.disabled = controlsDisabled || getDisplayedBet() <= 0;
+  elements.decreaseBet.disabled = controlsDisabled || getDisplayedBet() <= MIN_BET;
   elements.increaseBet.disabled = controlsDisabled || getDisplayedBet() >= maxBet;
 }
 
@@ -574,7 +754,7 @@ function updateBetBounds() {
  * @returns {number}
  */
 function getCurrentMaxBet() {
-  return Math.max(MIN_BET, state.balance);
+  return Math.min(MAX_BET, Math.max(MIN_BET, state.balance));
 }
 
 /**
@@ -583,9 +763,13 @@ function getCurrentMaxBet() {
  */
 function setControlsEnabled(enabled) {
   state.controlsEnabled = enabled;
+  const shopLocked = state.chestOpen;
   elements.autoSpinButton.disabled = !enabled;
   elements.spinButton.disabled = !enabled;
+  elements.stopButton.disabled = !state.autoSpinning;
   elements.bet.disabled = !enabled;
+  elements.shopToggle.disabled = !enabled || shopLocked;
+  elements.musicToggle.disabled = false;
   updateBetBounds();
   renderShop();
 }
@@ -643,50 +827,230 @@ function launchLightningBolt() {
  */
 function getDisplayedBet() {
   const parsedBet = Number.parseInt(elements.bet.value, 10);
-  return Number.isNaN(parsedBet) ? 0 : parsedBet;
+  if (Number.isNaN(parsedBet)) {
+    return MIN_BET;
+  }
+
+  return clamp(parsedBet, MIN_BET, getCurrentMaxBet());
 }
 
 /**
  * Creates compact Web Audio cues for wins, losses, and big wins.
  *
- * @returns {{ playHooray: () => void, playLoss: () => void, playBigWin: () => void }}
+ * @returns {{
+ *  ensureStarted: () => void,
+ *  setEnabled: (enabled: boolean) => void,
+ *  playHooray: () => void,
+ *  playLoss: () => void,
+ *  playBigWin: () => void,
+ *  playSpin: () => void,
+ *  playWinFx: () => void,
+ *  playWinTriumph: () => void
+ * }}
  */
 function createAudioFeedback() {
   const AudioContext = window.AudioContext || window.webkitAudioContext;
   let context;
+  let masterGain;
+  let masterConnected = false;
+  let musicStarted = false;
+  let enabled = true;
+  const MUSIC_STEP_SECONDS = 0.24;
+  const MUSIC_ARP_SEQUENCE = Object.freeze([
+    261.63, 392.0, 523.25, 783.99,
+    293.66, 440.0, 587.33, 880.0,
+    329.63, 493.88, 659.25, 987.77,
+    293.66, 440.0, 587.33, 783.99
+  ]);
+  const MUSIC_BASS_SEQUENCE = Object.freeze([
+    130.81, 146.83, 164.81, 146.83
+  ]);
+
+  /**
+   * @returns {AudioContext | null}
+   */
+  function getContext() {
+    if (!AudioContext) {
+      return null;
+    }
+
+    context ??= new AudioContext();
+    masterGain ??= context.createGain();
+    masterGain.gain.setValueAtTime(enabled ? 1 : 0, context.currentTime);
+    if (!masterConnected) {
+      masterGain.connect(context.destination);
+      masterConnected = true;
+    }
+    return context;
+  }
 
   /**
    * @param {number[]} frequencies Tone frequencies.
    * @param {number} duration Tone duration in seconds.
    * @param {OscillatorType} type Oscillator type.
+   * @param {number} gainPeak Peak gain for the envelope.
    * @returns {void}
    */
-  function play(frequencies, duration, type) {
-    if (!AudioContext) {
+  function play(frequencies, duration, type, gainPeak = 0.08) {
+    const activeContext = getContext();
+    if (!activeContext) {
       return;
     }
 
-    context ??= new AudioContext();
+    try {
+      if (activeContext.state !== "running") {
+        return;
+      }
 
-    frequencies.forEach((frequency, index) => {
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      const start = context.currentTime + index * duration * 0.82;
+      frequencies.forEach((frequency, index) => {
+        const oscillator = activeContext.createOscillator();
+        const gain = activeContext.createGain();
+        const start = activeContext.currentTime + index * duration * 0.82;
+
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, start);
+        gain.gain.setValueAtTime(0.001, start);
+        gain.gain.exponentialRampToValueAtTime(gainPeak, start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+        oscillator.connect(gain).connect(masterGain);
+        oscillator.start(start);
+        oscillator.stop(start + duration + 0.02);
+      });
+    } catch {
+      // Audio should never block gameplay.
+    }
+  }
+
+  /**
+   * Plays a short sci-fi frequency sweep.
+   *
+   * @param {number} fromFrequency Start frequency.
+   * @param {number} toFrequency End frequency.
+   * @param {number} duration Sweep duration in seconds.
+   * @param {OscillatorType} type Oscillator type.
+   * @param {number} gainPeak Peak gain for the envelope.
+   * @returns {void}
+   */
+  function playSweep(fromFrequency, toFrequency, duration, type = "sawtooth", gainPeak = 0.06) {
+    const activeContext = getContext();
+    if (!activeContext) {
+      return;
+    }
+
+    try {
+      if (activeContext.state !== "running") {
+        return;
+      }
+
+      const oscillator = activeContext.createOscillator();
+      const gain = activeContext.createGain();
+      const start = activeContext.currentTime;
+      const end = start + duration;
 
       oscillator.type = type;
-      oscillator.frequency.setValueAtTime(frequency, start);
+      oscillator.frequency.setValueAtTime(fromFrequency, start);
+      oscillator.frequency.exponentialRampToValueAtTime(toFrequency, end);
       gain.gain.setValueAtTime(0.001, start);
-      gain.gain.exponentialRampToValueAtTime(0.08, start + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
-      oscillator.connect(gain).connect(context.destination);
+      gain.gain.exponentialRampToValueAtTime(gainPeak, start + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.001, end);
+      oscillator.connect(gain).connect(masterGain);
       oscillator.start(start);
-      oscillator.stop(start + duration + 0.02);
-    });
+      oscillator.stop(end + 0.02);
+    } catch {
+      // Audio should never block gameplay.
+    }
+  }
+
+  /**
+   * Starts a gentle looping tune after the first user interaction.
+   *
+   * @returns {void}
+   */
+  function ensureStarted() {
+    const activeContext = getContext();
+    if (!activeContext || musicStarted) {
+      return;
+    }
+
+    try {
+      if (activeContext.state === "suspended") {
+        activeContext.resume().catch(() => {});
+      }
+
+      musicStarted = true;
+      const cycleLengthMs = MUSIC_ARP_SEQUENCE.length * MUSIC_STEP_SECONDS * 1000;
+
+      const scheduleCycle = () => {
+        if (activeContext.state !== "running") {
+          return;
+        }
+
+        const cycleStart = activeContext.currentTime + 0.04;
+        MUSIC_ARP_SEQUENCE.forEach((frequency, stepIndex) => {
+          const start = cycleStart + stepIndex * MUSIC_STEP_SECONDS;
+          const end = start + MUSIC_STEP_SECONDS;
+          const arpOsc = activeContext.createOscillator();
+          const arpGain = activeContext.createGain();
+          arpOsc.type = "square";
+          arpOsc.frequency.setValueAtTime(frequency, start);
+          arpGain.gain.setValueAtTime(0.001, start);
+          arpGain.gain.exponentialRampToValueAtTime(0.038, start + 0.025);
+          arpGain.gain.exponentialRampToValueAtTime(0.001, end);
+          arpOsc.connect(arpGain).connect(masterGain);
+          arpOsc.start(start);
+          arpOsc.stop(end + 0.01);
+        });
+
+        MUSIC_BASS_SEQUENCE.forEach((frequency, stepIndex) => {
+          const start = cycleStart + stepIndex * MUSIC_STEP_SECONDS * 4;
+          const end = start + MUSIC_STEP_SECONDS * 4;
+          const bassOsc = activeContext.createOscillator();
+          const bassGain = activeContext.createGain();
+          bassOsc.type = "sine";
+          bassOsc.frequency.setValueAtTime(frequency, start);
+          bassGain.gain.setValueAtTime(0.001, start);
+          bassGain.gain.exponentialRampToValueAtTime(0.028, start + 0.06);
+          bassGain.gain.exponentialRampToValueAtTime(0.001, end);
+          bassOsc.connect(bassGain).connect(masterGain);
+          bassOsc.start(start);
+          bassOsc.stop(end + 0.01);
+        });
+      };
+
+      scheduleCycle();
+      window.setInterval(scheduleCycle, cycleLengthMs);
+    } catch {
+      // Audio should never block gameplay.
+      musicStarted = false;
+    }
   }
 
   return {
+    ensureStarted,
+    setEnabled: (nextEnabled) => {
+      enabled = Boolean(nextEnabled);
+      const activeContext = getContext();
+      if (!activeContext) {
+        return;
+      }
+
+      masterGain.gain.setValueAtTime(enabled ? 1 : 0, activeContext.currentTime);
+    },
     playHooray: () => play([523, 659, 784, 1046], 0.12, "square"),
     playLoss: () => play([220, 146], 0.16, "sawtooth"),
-    playBigWin: () => play([392, 523, 659, 784, 1046], 0.11, "square")
+    playBigWin: () => play([392, 523, 659, 784, 1046, 1174], 0.13, "square", 0.1),
+    playSpin: () => play([220, 260, 300, 340, 380], 0.09, "sawtooth", 0.05),
+    playWinFx: () => playSweep(420, 1320, 0.22, "sawtooth", 0.065),
+    playWinTriumph: () => play([523, 659, 784, 1046, 1318], 0.14, "triangle", 0.095)
   };
 }
+
+["pointerdown", "keydown"].forEach((eventName) => {
+  window.addEventListener(
+    eventName,
+    () => {
+      audio.ensureStarted();
+    },
+    { once: true }
+  );
+});
