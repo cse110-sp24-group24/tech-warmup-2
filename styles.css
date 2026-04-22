@@ -33,6 +33,25 @@ body {
   overflow-x: hidden;
 }
 
+body.theme-light {
+  --ink: #2b1f14;
+  --muted: #7f4a1d;
+  --panel: rgba(255, 245, 211, 0.86);
+  --panel-strong: rgba(255, 238, 194, 0.95);
+  --cyan: #ff9f1c;
+  --magenta: #e63946;
+  --purple: #fb8500;
+  --blue: #ffd166;
+  --amber: #ffb703;
+  --danger: #d00000;
+  --green: #2a9d52;
+  --border: rgba(214, 60, 52, 0.48);
+  background:
+    radial-gradient(circle at 20% 16%, rgba(255, 234, 167, 0.46), transparent 22rem),
+    radial-gradient(circle at 80% 18%, rgba(255, 121, 63, 0.3), transparent 20rem),
+    linear-gradient(180deg, #ffe8a3 0%, #ffb26b 42%, #ff6b49 72%, #f4cd67 100%);
+}
+
 button,
 input {
   font: inherit;
@@ -59,9 +78,34 @@ button {
   cursor: url("assets/cursor-reticle.svg") 12 12, crosshair;
 }
 
+.theme_toolbar {
+  width: min(900px, calc(100% - 32px));
+  margin: 0 auto;
+  padding-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.theme_toggle_button {
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 209, 102, 0.82);
+  border-radius: 999px;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, rgba(255, 209, 102, 0.24), rgba(47, 248, 255, 0.14));
+}
+
+.theme_toggle_button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 14px rgba(255, 209, 102, 0.38);
+}
+
 .game_ui .modal_overlay,
 .game_ui .machine,
 .game_ui .paytable_tab,
+.game_ui .bonus_open_tab,
 .game_ui .reels,
 .game_ui .symbol {
   cursor: inherit;
@@ -101,6 +145,11 @@ button {
   opacity: 0.2;
 }
 
+body.theme-light .crt_overlay {
+  opacity: 0.08;
+  mix-blend-mode: normal;
+}
+
 .game_shell {
   width: min(900px, calc(100% - 32px));
   min-height: 100vh;
@@ -122,6 +171,10 @@ button {
   animation: panel-float 5.5s ease-in-out infinite;
 }
 
+.bonus_open_tab {
+  grid-column: 1;
+}
+
 .machine {
   position: relative;
   grid-column: 1;
@@ -130,6 +183,26 @@ button {
 
 .paytable_tab {
   grid-column: 1;
+}
+
+.bonus_open_button {
+  width: 100%;
+  min-height: 46px;
+  border: 0;
+  border-radius: 8px;
+  color: #fff3ea;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  background:
+    linear-gradient(180deg, rgba(255, 80, 80, 0.95), rgba(180, 16, 16, 0.95)),
+    linear-gradient(120deg, rgba(255, 180, 0, 0.25), rgba(255, 68, 68, 0.4));
+  box-shadow: 0 0 20px rgba(255, 68, 68, 0.34);
+}
+
+.bonus_open_button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 24px rgba(255, 68, 68, 0.48);
 }
 
 .boost_indicator {
@@ -481,6 +554,71 @@ input[type="number"]::-webkit-inner-spin-button,
   background: rgba(8, 12, 34, 0.78);
 }
 
+body.theme-light h1 {
+  text-shadow: 0 0 12px rgba(255, 146, 72, 0.75), 3px 3px 0 rgba(214, 60, 52, 0.25);
+}
+
+body.theme-light .machine,
+body.theme-light .paytable_tab {
+  box-shadow: 0 0 24px rgba(229, 117, 29, 0.18), inset 0 0 32px rgba(232, 73, 73, 0.1);
+}
+
+body.theme-light .status {
+  border-color: rgba(230, 107, 50, 0.45);
+  background: rgba(255, 232, 186, 0.72);
+}
+
+body.theme-light .reels {
+  border-color: rgba(214, 60, 52, 0.58);
+  background: linear-gradient(180deg, rgba(255, 214, 157, 0.88), rgba(255, 183, 115, 0.9));
+  box-shadow: inset 0 0 30px rgba(232, 98, 47, 0.2);
+}
+
+body.theme-light .reel {
+  border-color: rgba(230, 107, 50, 0.58);
+  background: #fff2d0;
+  box-shadow: inset 0 0 22px rgba(239, 133, 50, 0.22);
+}
+
+body.theme-light .symbol {
+  border-bottom-color: rgba(170, 120, 80, 0.22);
+  text-shadow: 0 0 6px rgba(255, 170, 110, 0.45);
+}
+
+body.theme-light .spin_button,
+body.theme-light .auto_spin_button,
+body.theme-light .stop_button {
+  border-color: rgba(214, 60, 52, 0.68);
+  background: linear-gradient(135deg, rgba(255, 166, 0, 0.36), rgba(231, 71, 58, 0.28));
+}
+
+body.theme-light .shop_open_button {
+  border-color: rgba(48, 159, 82, 0.72);
+  background: linear-gradient(135deg, rgba(84, 205, 109, 0.3), rgba(255, 173, 66, 0.2));
+}
+
+body.theme-light .music_toggle_button {
+  border-color: rgba(230, 107, 50, 0.72);
+  background: linear-gradient(135deg, rgba(255, 191, 73, 0.24), rgba(230, 107, 50, 0.14));
+}
+
+body.theme-light .paytable_tab_button {
+  color: #6a260f;
+  background: rgba(255, 226, 173, 0.86);
+}
+
+body.theme-light .paytable_tab_panel {
+  background:
+    linear-gradient(165deg, rgba(255, 168, 74, 0.18) 0%, transparent 42%),
+    linear-gradient(335deg, rgba(214, 60, 52, 0.12) 0%, transparent 38%),
+    linear-gradient(180deg, rgba(255, 240, 201, 0.95), rgba(255, 218, 168, 0.92));
+}
+
+body.theme-light .bonus_open_button {
+  color: #fff8ef;
+  box-shadow: 0 0 20px rgba(214, 60, 52, 0.4);
+}
+
 .paytable_tab {
   overflow: hidden;
 }
@@ -518,29 +656,10 @@ input[type="number"]::-webkit-inner-spin-button,
     0 0 20px rgba(255, 61, 242, 0.15);
 }
 
-.bonus_tab:has(#bonus_panel:not([hidden])) .paytable_tab_button {
-  color: var(--ink);
-  background: linear-gradient(
-    120deg,
-    rgba(84, 255, 173, 0.22) 0%,
-    rgba(47, 248, 255, 0.18) 45%,
-    rgba(74, 168, 255, 0.2) 100%
-  );
-  box-shadow:
-    inset 0 0 20px rgba(84, 255, 173, 0.18),
-    0 0 20px rgba(47, 248, 255, 0.15);
-}
-
 .paytable_tab:has(#paytable_panel:not([hidden])) .paytable_tab_icon {
   border-color: rgba(255, 209, 102, 0.75);
   color: var(--amber);
   box-shadow: 0 0 12px rgba(255, 209, 102, 0.35);
-}
-
-.bonus_tab:has(#bonus_panel:not([hidden])) .bonus_tab_icon {
-  border-color: rgba(84, 255, 173, 0.8);
-  color: var(--green);
-  box-shadow: 0 0 12px rgba(84, 255, 173, 0.35);
 }
 
 .paytable_tab_button span:first-child {
@@ -871,11 +990,6 @@ input[type="number"]::-webkit-inner-spin-button,
   text-transform: uppercase;
 }
 
-#bonus_panel {
-  display: grid;
-  gap: 12px;
-}
-
 .bonus_game_prompt {
   margin: 0;
   color: var(--muted);
@@ -1103,6 +1217,7 @@ input[type="number"]::-webkit-inner-spin-button,
   }
 
   .paytable_tab,
+  .bonus_open_tab,
   .machine {
     grid-column: 1;
     grid-row: auto;

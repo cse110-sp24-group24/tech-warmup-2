@@ -54,8 +54,6 @@ const elements = {
   bonusResultContinueButton: document.querySelector("#bonus_result_continue_button"),
   bonusResultModal: document.querySelector("#bonus_result_modal"),
   bonusStartButton: document.querySelector("#bonus_start_button"),
-  bonusTabPanel: document.querySelector("#bonus_panel"),
-  bonusTabToggle: document.querySelector("#bonus_toggle"),
   boostIndicator: document.querySelector("#boost_indicator"),
   boostIndicatorText: document.querySelector("#boost_indicator_text"),
   chestGrid: document.querySelector("#chest_grid"),
@@ -64,6 +62,9 @@ const elements = {
   decreaseBet: document.querySelector("#decrease_bet"),
   flappyBonusTokens: document.querySelector("#flappy_bonus_tokens"),
   flappyCanvas: document.querySelector("#flappy_canvas"),
+  flappyModal: document.querySelector("#flappy_modal"),
+  flappyModalClose: document.querySelector("#flappy_modal_close"),
+  flappyOpenButton: document.querySelector("#flappy_open_button"),
   flappyPrompt: document.querySelector("#flappy_prompt"),
   increaseBet: document.querySelector("#increase_bet"),
   paytableList: document.querySelector("#paytable_list"),
@@ -78,6 +79,7 @@ const elements = {
   shopModal: document.querySelector("#shop_modal"),
   shopModalClose: document.querySelector("#shop_modal_close"),
   shopToggle: document.querySelector("#shop_toggle"),
+  themeToggle: document.querySelector("#theme_toggle"),
   musicToggle: document.querySelector("#music_toggle"),
   spinButton: document.querySelector("#spin_button"),
   status: document.querySelector("#status")
@@ -94,6 +96,7 @@ const state = {
   boost: null,
   chestOpen: false,
   controlsEnabled: true,
+  darkMode: true,
   musicEnabled: true,
   spinning: false
 };
@@ -104,6 +107,8 @@ renderBoostIndicator();
 renderMusicToggle();
 renderBalance();
 updateBetBounds();
+renderThemeToggle();
+applyTheme(true);
 background.start();
 
 elements.controls.addEventListener("submit", handleSpin);
@@ -113,21 +118,42 @@ elements.decreaseBet.addEventListener("click", () => adjustBet(-1));
 elements.increaseBet.addEventListener("click", () => adjustBet(1));
 elements.bet.addEventListener("input", updateBetBounds);
 elements.paytableToggle.addEventListener("click", togglePaytable);
-elements.bonusTabToggle.addEventListener("click", toggleBonusTab);
+elements.flappyOpenButton.addEventListener("click", openFlappyModal);
+elements.flappyModalClose.addEventListener("click", closeFlappyModal);
 elements.bonusStartButton.addEventListener("click", startFlappyBonusRound);
 elements.bonusResultContinueButton.addEventListener("click", closeBonusResultModal);
 elements.rewardContinueButton.addEventListener("click", closeRewardModal);
 elements.shopToggle.addEventListener("click", openShopModal);
 elements.musicToggle.addEventListener("click", toggleMusic);
+elements.themeToggle.addEventListener("click", toggleTheme);
 elements.shopModalClose.addEventListener("click", closeShopModal);
 elements.shopModal.addEventListener("click", (event) => {
   if (event.target === elements.shopModal) {
     closeShopModal();
   }
 });
+elements.flappyModal.addEventListener("click", (event) => {
+  if (event.target === elements.flappyModal) {
+    closeFlappyModal();
+  }
+});
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape" && !elements.shopModal.hidden) {
+  if (event.key !== "Escape") {
+    return;
+  }
+
+  if (!elements.shopModal.hidden) {
     closeShopModal();
+    return;
+  }
+
+  if (!elements.flappyModal.hidden) {
+    closeFlappyModal();
+    return;
+  }
+
+  if (!elements.bonusResultModal.hidden) {
+    closeBonusResultModal();
   }
 });
 
@@ -274,7 +300,7 @@ function resolveSpinBet(rawBet, balance) {
  * @returns {void}
  */
 function openShopModal() {
-  if (state.chestOpen || state.spinning || state.autoSpinning || state.bonusGameActive) {
+  if (state.chestOpen || state.spinning || state.autoSpinning || state.bonusGameActive || !elements.flappyModal.hidden) {
     return;
   }
 
@@ -291,7 +317,9 @@ function openShopModal() {
  */
 function closeShopModal() {
   elements.shopModal.hidden = true;
-  document.body.style.overflow = "";
+  if (elements.flappyModal.hidden) {
+    document.body.style.overflow = "";
+  }
 }
 
 /**
@@ -554,11 +582,53 @@ function togglePaytable() {
 /**
  * @returns {void}
  */
-function toggleBonusTab() {
-  const expanded = elements.bonusTabToggle.getAttribute("aria-expanded") === "true";
-  elements.bonusTabToggle.setAttribute("aria-expanded", String(!expanded));
-  elements.bonusTabPanel.hidden = expanded;
-  elements.bonusTabToggle.querySelector(".bonus_tab_icon").textContent = expanded ? "+" : "-";
+function openFlappyModal() {
+  if (state.chestOpen || state.spinning || state.autoSpinning || state.bonusGameActive) {
+    return;
+  }
+
+  closeShopModal();
+  elements.flappyModal.hidden = false;
+  document.body.style.overflow = "hidden";
+  elements.flappyModalClose.focus();
+}
+
+/**
+ * @returns {void}
+ */
+function closeFlappyModal() {
+  if (state.bonusGameActive) {
+    return;
+  }
+
+  elements.flappyModal.hidden = true;
+  document.body.style.overflow = "";
+}
+
+/**
+ * @returns {void}
+ */
+function toggleTheme() {
+  applyTheme(!state.darkMode);
+  renderThemeToggle();
+}
+
+/**
+ * @returns {void}
+ */
+function renderThemeToggle() {
+  elements.themeToggle.setAttribute("aria-pressed", String(!state.darkMode));
+  elements.themeToggle.textContent = state.darkMode ? "Theme: Dark" : "Theme: Light";
+}
+
+/**
+ * @param {boolean} darkMode Whether dark mode is active.
+ * @returns {void}
+ */
+function applyTheme(darkMode) {
+  state.darkMode = darkMode;
+  document.body.classList.toggle("theme-light", !darkMode);
+  background.setTheme(darkMode ? "dark" : "light");
 }
 
 /**
@@ -570,11 +640,12 @@ async function startFlappyBonusRound() {
   }
 
   closeShopModal();
+  openFlappyModal();
   state.bonusGameActive = true;
   setControlsEnabled(false);
   elements.flappyBonusTokens.textContent = "0";
   elements.flappyPrompt.textContent = "Press Space to Start";
-  setStatus("Bonus round: Orbit Run active.", "ready");
+  setStatus("FLAPPY BLOB active.", "ready");
 
   let earnedTokens = 0;
   try {
@@ -586,13 +657,14 @@ async function startFlappyBonusRound() {
     updateBetBounds();
     renderShop();
     setControlsEnabled(state.balance >= MIN_BET && !state.chestOpen);
+    closeFlappyModal();
   }
 
   openBonusResultModal(earnedTokens);
   if (earnedTokens > 0) {
-    setStatus(`Bonus round complete. Earned ${earnedTokens} tokens.`, "win");
+    setStatus(`FLAPPY BLOB complete. Earned ${earnedTokens} tokens.`, "win");
   } else {
-    setStatus("Bonus round complete. No bonus tokens earned.", "loss");
+    setStatus("FLAPPY BLOB complete. No bonus tokens earned.", "loss");
   }
 }
 
@@ -845,6 +917,7 @@ function setControlsEnabled(enabled) {
   elements.bet.disabled = !nextEnabled;
   elements.shopToggle.disabled = !nextEnabled;
   elements.musicToggle.disabled = false;
+  elements.flappyOpenButton.disabled = !nextEnabled;
   elements.bonusStartButton.disabled = controlsLocked || state.spinning || state.autoSpinning;
   updateBetBounds();
   renderShop();
@@ -1352,4 +1425,3 @@ function createAudioFeedback() {
     { once: true }
   );
 });
-

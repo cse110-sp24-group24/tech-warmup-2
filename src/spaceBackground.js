@@ -1,4 +1,18 @@
 const STAR_COLORS = ["#f8fbff", "#2ff8ff", "#ff3df2", "#9b5cff", "#4aa8ff"];
+const SUNSET_SKY_COLORS = Object.freeze({
+  top: "#ffe08a",
+  mid: "#ff9248",
+  low: "#ff5630",
+  horizon: "#ffca57",
+  sun: "#ffd166",
+  ground: "#3c8c49",
+  road: "#1f2a32",
+  roadStripe: "#ffd166",
+  palm: "#245f33",
+  palmAccent: "#3ea04d",
+  car: "#d72638",
+  carDark: "#8f1a26"
+});
 
 /**
  * Animated retro pixel space background rendered on canvas.
@@ -18,6 +32,7 @@ export class RetroSpaceBackground {
     this.explosions = [];
     this.warpUntil = 0;
     this.frameId = 0;
+    this.theme = "dark";
 
     this.handleResize = this.handleResize.bind(this);
     this.handlePointerMove = this.handlePointerMove.bind(this);
@@ -55,6 +70,10 @@ export class RetroSpaceBackground {
    * @returns {void}
    */
   triggerFireworks() {
+    if (this.theme === "light") {
+      return;
+    }
+
     const width = window.innerWidth;
     const height = window.innerHeight;
 
@@ -67,6 +86,14 @@ export class RetroSpaceBackground {
         firework: true
       });
     }
+  }
+
+  /**
+   * @param {"dark" | "light"} theme Background theme.
+   * @returns {void}
+   */
+  setTheme(theme) {
+    this.theme = theme === "light" ? "light" : "dark";
   }
 
   /**
@@ -122,6 +149,10 @@ export class RetroSpaceBackground {
    * @returns {void}
    */
   handleClick(event) {
+    if (this.theme === "light") {
+      return;
+    }
+
     this.explosions.push({
       x: event.clientX,
       y: event.clientY,
@@ -142,14 +173,19 @@ export class RetroSpaceBackground {
     const parallaxY = this.pointer.active ? (this.pointer.y / height - 0.5) : 0;
 
     ctx.clearRect(0, 0, width, height);
-    this.drawGrid(ctx, width, height, parallaxX);
-    this.drawStars(ctx, width, height, time, parallaxX, parallaxY);
-    this.drawObjects(ctx, width, height, time, parallaxX, parallaxY);
-    this.drawParticles(ctx, width, height, time);
-    this.drawExplosions(ctx);
 
-    if (time < this.warpUntil) {
-      this.drawWarp(ctx, width, height, time);
+    if (this.theme === "light") {
+      this.drawSunsetScene(ctx, width, height, time, parallaxX, parallaxY);
+    } else {
+      this.drawGrid(ctx, width, height, parallaxX);
+      this.drawStars(ctx, width, height, time, parallaxX, parallaxY);
+      this.drawObjects(ctx, width, height, time, parallaxX, parallaxY);
+      this.drawParticles(ctx, width, height, time);
+      this.drawExplosions(ctx);
+
+      if (time < this.warpUntil) {
+        this.drawWarp(ctx, width, height, time);
+      }
     }
 
     this.frameId = requestAnimationFrame(this.draw);
@@ -419,6 +455,189 @@ export class RetroSpaceBackground {
       ctx.stroke();
     }
 
+    ctx.restore();
+  }
+
+  /**
+   * @param {CanvasRenderingContext2D} ctx Canvas context.
+   * @param {number} width View width.
+   * @param {number} height View height.
+   * @param {number} time Animation timestamp.
+   * @param {number} parallaxX Pointer x offset.
+   * @param {number} parallaxY Pointer y offset.
+   * @returns {void}
+   */
+  drawSunsetScene(ctx, width, height, time, parallaxX, parallaxY) {
+    const sky = ctx.createLinearGradient(0, 0, 0, height);
+    sky.addColorStop(0, SUNSET_SKY_COLORS.top);
+    sky.addColorStop(0.4, SUNSET_SKY_COLORS.mid);
+    sky.addColorStop(0.72, SUNSET_SKY_COLORS.low);
+    sky.addColorStop(1, SUNSET_SKY_COLORS.horizon);
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, height);
+
+    const sunX = width * 0.5 + parallaxX * 60;
+    const sunY = height * 0.23 + parallaxY * 30;
+    const sunRadius = Math.max(52, width * 0.07);
+    const sunGlow = ctx.createRadialGradient(sunX, sunY, sunRadius * 0.2, sunX, sunY, sunRadius * 1.6);
+    sunGlow.addColorStop(0, "rgba(255, 209, 102, 0.95)");
+    sunGlow.addColorStop(1, "rgba(255, 209, 102, 0)");
+    ctx.fillStyle = sunGlow;
+    ctx.fillRect(sunX - sunRadius * 1.8, sunY - sunRadius * 1.8, sunRadius * 3.6, sunRadius * 3.6);
+    ctx.fillStyle = SUNSET_SKY_COLORS.sun;
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    this.drawSunsetGrid(ctx, width, height, parallaxX);
+    this.drawPalms(ctx, width, height, time, parallaxX);
+    this.drawCruiser(ctx, width, height, time, parallaxX);
+  }
+
+  /**
+   * @param {CanvasRenderingContext2D} ctx Canvas context.
+   * @param {number} width View width.
+   * @param {number} height View height.
+   * @param {number} parallaxX Pointer x offset.
+   * @returns {void}
+   */
+  drawSunsetGrid(ctx, width, height, parallaxX) {
+    const horizonY = height * 0.62;
+    ctx.fillStyle = SUNSET_SKY_COLORS.ground;
+    ctx.fillRect(0, horizonY, width, height - horizonY);
+
+    ctx.fillStyle = SUNSET_SKY_COLORS.road;
+    const roadWidthTop = width * 0.14;
+    const roadWidthBottom = width * 0.56;
+    ctx.beginPath();
+    ctx.moveTo(width / 2 - roadWidthTop / 2, horizonY);
+    ctx.lineTo(width / 2 + roadWidthTop / 2, horizonY);
+    ctx.lineTo(width / 2 + roadWidthBottom / 2, height);
+    ctx.lineTo(width / 2 - roadWidthBottom / 2, height);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.globalAlpha = 0.28;
+    ctx.strokeStyle = "#ffd166";
+    ctx.lineWidth = 1;
+    for (let x = -40; x < width + 40; x += 56) {
+      ctx.beginPath();
+      ctx.moveTo(x + parallaxX * 26, height);
+      ctx.lineTo(width / 2 + (x - width / 2) * 0.34, horizonY);
+      ctx.stroke();
+    }
+    for (let y = horizonY + 10; y < height; y += 30) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = SUNSET_SKY_COLORS.roadStripe;
+    for (let stripe = 0; stripe < 9; stripe += 1) {
+      const t = stripe / 9;
+      const y = horizonY + t * (height - horizonY);
+      const stripeWidth = 2 + t * 10;
+      const stripeHeight = 4 + t * 8;
+      ctx.fillRect(width / 2 - stripeWidth / 2, y, stripeWidth, stripeHeight);
+    }
+  }
+
+  /**
+   * @param {CanvasRenderingContext2D} ctx Canvas context.
+   * @param {number} width View width.
+   * @param {number} height View height.
+   * @param {number} time Animation timestamp.
+   * @param {number} parallaxX Pointer x offset.
+   * @returns {void}
+   */
+  drawPalms(ctx, width, height, time, parallaxX) {
+    const baseY = height * 0.64;
+    const sway = Math.sin(time * 0.0016) * 2;
+    const palmLocations = [
+      { x: width * 0.12 + parallaxX * 10, scale: 1.08 },
+      { x: width * 0.22 + parallaxX * 14, scale: 0.82 },
+      { x: width * 0.82 + parallaxX * 10, scale: 1.03 },
+      { x: width * 0.91 + parallaxX * 14, scale: 0.76 }
+    ];
+
+    palmLocations.forEach((palm, index) => {
+      const trunkHeight = 120 * palm.scale;
+      const trunkWidth = 10 * palm.scale;
+      const trunkX = palm.x + Math.sin(time * 0.0012 + index) * 1.5;
+      const trunkY = baseY - trunkHeight;
+
+      ctx.save();
+      ctx.translate(trunkX, trunkY);
+      ctx.fillStyle = "#7b3f00";
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(trunkWidth, 0);
+      ctx.lineTo(trunkWidth - 6, trunkHeight);
+      ctx.lineTo(-6, trunkHeight);
+      ctx.closePath();
+      ctx.fill();
+
+      const frondCount = 6;
+      for (let frond = 0; frond < frondCount; frond += 1) {
+        const angle = -1.65 + (frond / (frondCount - 1)) * 2.1;
+        const len = 54 * palm.scale + Math.sin(time * 0.0018 + frond) * 5 + sway;
+        ctx.strokeStyle = frond % 2 === 0 ? SUNSET_SKY_COLORS.palm : SUNSET_SKY_COLORS.palmAccent;
+        ctx.lineWidth = 4 * palm.scale;
+        ctx.beginPath();
+        ctx.moveTo(trunkWidth * 0.35, 4);
+        ctx.lineTo(trunkWidth * 0.35 + Math.cos(angle) * len, 4 + Math.sin(angle) * len);
+        ctx.stroke();
+      }
+      ctx.restore();
+    });
+  }
+
+  /**
+   * @param {CanvasRenderingContext2D} ctx Canvas context.
+   * @param {number} width View width.
+   * @param {number} height View height.
+   * @param {number} time Animation timestamp.
+   * @param {number} parallaxX Pointer x offset.
+   * @returns {void}
+   */
+  drawCruiser(ctx, width, height, time, parallaxX) {
+    const trackY = height * 0.72;
+    const travel = ((time * 0.09) % (width + 280)) - 140;
+    const carX = travel + parallaxX * 20;
+    const carY = trackY + Math.sin(time * 0.003) * 1.4;
+
+    ctx.save();
+    ctx.translate(carX, carY);
+    ctx.fillStyle = SUNSET_SKY_COLORS.car;
+    ctx.fillRect(-52, -12, 104, 22);
+    ctx.fillRect(-34, -26, 68, 16);
+
+    ctx.fillStyle = SUNSET_SKY_COLORS.carDark;
+    ctx.fillRect(-28, -22, 56, 10);
+    ctx.fillStyle = "#a7f4ff";
+    ctx.fillRect(-24, -20, 22, 8);
+    ctx.fillRect(4, -20, 20, 8);
+
+    ctx.fillStyle = "#111";
+    ctx.beginPath();
+    ctx.arc(-30, 12, 9, 0, Math.PI * 2);
+    ctx.arc(30, 12, 9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffd166";
+    ctx.beginPath();
+    ctx.arc(-30, 12, 3, 0, Math.PI * 2);
+    ctx.arc(30, 12, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = "rgba(255, 214, 102, 0.65)";
+    ctx.beginPath();
+    ctx.moveTo(52, -6);
+    ctx.lineTo(126, -18);
+    ctx.lineTo(126, 6);
+    ctx.closePath();
+    ctx.fill();
     ctx.restore();
   }
 }
