@@ -462,6 +462,10 @@ h2 {
   cursor: pointer;
 }
 
+.icon_button {
+  color: #e86a17;
+}
+
 .icon_button:hover,
 .spin_button:hover,
 .auto_spin_button:hover,
@@ -790,6 +794,12 @@ body.theme-light .bonus_open_button {
 .paytable_row span,
 .shop_item span {
   min-width: 0;
+}
+
+.shop_rules,
+.shop_rules p,
+.shop_item span {
+  color: #e86a17;
 }
 
 .paytable_row strong {
