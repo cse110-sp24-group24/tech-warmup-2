@@ -1,4 +1,4 @@
-# FINAL REPORT: 
+# FINAL REPORT
 
 ## 1. The Process & Approach
 
