@@ -348,6 +348,7 @@ h2 {
 .controls {
   margin-top: 22px;
   display: grid;
+
   grid-template-columns:
     auto
     minmax(160px, 230px)
@@ -356,6 +357,7 @@ h2 {
     minmax(100px, 1fr)
     minmax(100px, 1fr)
     minmax(120px, 1fr);
+
   gap: 12px;
   align-items: center;
 }
@@ -374,7 +376,9 @@ h2 {
 .icon_button,
 .spin_button,
 .auto_spin_button,
+
 .stop_button,
+
 .shop_open_button,
 .music_toggle_button {
   min-height: 44px;
@@ -388,7 +392,9 @@ h2 {
 .icon_button:hover,
 .spin_button:hover,
 .auto_spin_button:hover,
+
 .stop_button:hover,
+
 .shop_open_button:hover,
 .music_toggle_button:hover {
   transform: translateY(-2px);
@@ -398,7 +404,9 @@ h2 {
 .icon_button:disabled,
 .spin_button:disabled,
 .auto_spin_button:disabled,
+
 .stop_button:disabled,
+
 .shop_open_button:disabled,
 .music_toggle_button:disabled,
 input:disabled {
@@ -448,10 +456,12 @@ input[type="number"]::-webkit-inner-spin-button,
   background: linear-gradient(135deg, rgba(255, 209, 102, 0.28), rgba(47, 248, 255, 0.18));
 }
 
+
 .stop_button {
   border-color: rgba(255, 94, 122, 0.78);
   background: linear-gradient(135deg, rgba(255, 94, 122, 0.32), rgba(255, 61, 242, 0.16));
 }
+
 
 .shop_open_button {
   text-transform: uppercase;
@@ -1000,12 +1010,14 @@ input[type="number"]::-webkit-inner-spin-button,
   }
 
   .controls {
+
     grid-template-columns: 1fr 1fr 1fr;
     grid-template-areas:
       "label label label"
       "bet bet bet"
       "spin auto stop"
       "shop music music";
+
   }
 
   .controls label {
@@ -1028,9 +1040,11 @@ input[type="number"]::-webkit-inner-spin-button,
     grid-area: shop;
   }
 
+
   .controls .stop_button {
     grid-area: stop;
   }
+
 
   .controls .music_toggle_button {
     grid-area: music;

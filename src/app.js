@@ -142,17 +142,21 @@ async function handleAutoSpin() {
   const sessionStartBalance = state.balance;
   let completedSpins = 0;
 
+
   state.autoSpinStopRequested = false;
+
   state.autoSpinning = true;
   setControlsEnabled(false);
   setStatus("Auto spin…", "ready");
 
   try {
+
     while (
       completedSpins < AUTO_SPIN_COUNT &&
       state.balance >= autoSpinBet &&
       !state.autoSpinStopRequested
     ) {
+
       if (state.chestOpen) {
         break;
       }
@@ -169,9 +173,11 @@ async function handleAutoSpin() {
         break;
       }
 
+
       if (state.autoSpinStopRequested) {
         break;
       }
+
 
       if (outcome.payout > 0 && !state.chestOpen) {
         await delay(AUTO_SPIN_WIN_PAUSE_MS);
@@ -193,11 +199,13 @@ async function handleAutoSpin() {
         `Auto session — ${completedSpins} ${spinWord}, ${formatNetTokens(net)}. Pick a chest to continue.`,
         net > 0 ? "win" : net < 0 ? "loss" : "ready"
       );
+
     } else if (stopRequested) {
       setStatus(
         `Auto spin stopped — ${completedSpins} ${spinWord}, ${formatNetTokens(net)}.`,
         net > 0 ? "win" : net < 0 ? "loss" : "ready"
       );
+
     } else if (completedSpins > 0) {
       setStatus(`Auto session — ${completedSpins} ${spinWord}, ${formatNetTokens(net)}.`, net > 0 ? "win" : net < 0 ? "loss" : "ready");
     } else if (!state.chestOpen) {
@@ -207,6 +215,7 @@ async function handleAutoSpin() {
 }
 
 /**
+
  * Requests auto-spin to stop after the current spin finishes.
  *
  * @returns {void}
@@ -221,6 +230,7 @@ function handleStopAutoSpin() {
 }
 
 /**
+
  * @param {number} delta End balance minus start balance for a session.
  * @returns {string}
  */
