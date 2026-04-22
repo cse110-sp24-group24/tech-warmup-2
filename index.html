@@ -12,15 +12,15 @@
     <canvas id="space_background" aria-hidden="true"></canvas>
     <div class="crt_overlay" aria-hidden="true"></div>
 
-
+    <div class="game_ui">
     <!-- Game Layout -->
     <main class="game_shell" aria-labelledby="game_title">
 
       <!-- Slot Machine -->
       <section class="machine" aria-label="Slot machine">
-        <div class="boost_indicator" id="boost_indicator" hidden>
-          <span aria-hidden="true">◆</span>
-          Payout boost active
+        <div class="boost_indicator" id="boost_indicator" hidden role="status" aria-live="polite">
+          <span class="boost_indicator_icon" aria-hidden="true">◆</span>
+          <span id="boost_indicator_text" class="boost_indicator_text"></span>
         </div>
 
         <!-- Header And Balance -->
@@ -43,7 +43,7 @@
 
 
         <!-- Reel Play Area -->
-        <div class="reels" id="reels" role="group" aria-label="Five independent reels">
+        <div class="reels" role="group" aria-label="Five independent reels">
           <div class="reel" data-reel="0" role="group" aria-label="Reel 1">
             <div class="symbol symbol_top" role="img" aria-label="Orb" data-symbol="ORB">◎</div>
             <div class="symbol symbol_center" role="img" aria-label="Seven" data-symbol="7">7</div>
@@ -77,7 +77,7 @@
           <label for="bet">Bet</label>
           <div class="bet_control">
             <button class="icon_button" type="button" id="decrease_bet" aria-label="Decrease bet">-</button>
-            <input id="bet" name="bet" type="number" min="0" max="100" step="1" value="5">
+            <input id="bet" name="bet" type="number" min="1" max="100" step="1" value="5">
             <button class="icon_button" type="button" id="increase_bet" aria-label="Increase bet">+</button>
           </div>
           <button class="spin_button" id="spin_button" type="submit">
@@ -87,6 +87,17 @@
           <button class="auto_spin_button" id="auto_spin_button" type="button">
             <span aria-hidden="true">&gt;&gt;</span>
             Auto 5
+          </button>
+
+          <button class="stop_button" id="stop_button" type="button" disabled>
+            Stop
+          </button>
+
+          <button class="shop_open_button" id="shop_toggle" type="button">
+            Shop
+          </button>
+          <button class="music_toggle_button" id="music_toggle" type="button" aria-pressed="true">
+            Music: On
           </button>
         </form>
       </section>
@@ -115,18 +126,28 @@
         </div>
       </section>
 
+    </main>
 
-      <!-- Shop -->
-      <aside class="shop_panel" aria-labelledby="shop_title">
-        <h2 id="shop_title">Shop</h2>
+    <!-- Shop Modal -->
+    <div
+      class="modal_overlay modal_overlay_shop"
+      id="shop_modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="shop_modal_title"
+      hidden
+    >
+      <div class="modal_panel shop_modal_panel" tabindex="-1">
+        <button type="button" class="modal_close_button" id="shop_modal_close" aria-label="Close shop">
+          ×
+        </button>
+        <h2 id="shop_modal_title">Shop</h2>
         <div class="shop_rules">
           <p>Buy one payout boost at a time. Boosts apply to the next 5 spins.</p>
         </div>
-
         <div class="shop_items" id="shop_items"></div>
-      </aside>
-
-    </main>
+      </div>
+    </div>
 
 
     <!-- Redemption Chest Popup -->
@@ -147,7 +168,7 @@
         <button class="reward_continue_button" id="reward_continue_button" type="button">Continue</button>
       </div>
     </div>
-
+    </div>
 
     <!-- App Scripts -->
     <script type="module" src="src/app.js"></script>

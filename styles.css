@@ -54,6 +54,37 @@ button {
   z-index: -2;
 }
 
+.game_ui {
+  position: relative;
+  cursor: url("assets/cursor-reticle.svg") 12 12, crosshair;
+}
+
+.game_ui .modal_overlay,
+.game_ui .machine,
+.game_ui .paytable_tab,
+.game_ui .reels,
+.game_ui .symbol {
+  cursor: inherit;
+}
+
+.game_ui button:not(:disabled),
+.game_ui .paytable_tab_button,
+.game_ui .modal_close_button,
+.game_ui label[for="bet"] {
+  cursor: url("assets/cursor-pointer.svg") 4 4, pointer;
+}
+
+.game_ui input[type="number"],
+.game_ui input[type="text"],
+.game_ui textarea {
+  cursor: text;
+}
+
+.game_ui button:disabled,
+.game_ui .shop_buy_button:disabled {
+  cursor: not-allowed;
+}
+
 .crt_overlay {
   z-index: -1;
   pointer-events: none;
@@ -67,23 +98,22 @@ button {
     ),
     radial-gradient(circle, transparent 50%, rgba(0, 0, 0, 0.32));
   mix-blend-mode: screen;
-  opacity: 0.36;
+  opacity: 0.2;
 }
 
 .game_shell {
-  width: min(1240px, calc(100% - 32px));
+  width: min(900px, calc(100% - 32px));
   min-height: 100vh;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   align-items: center;
   padding: 28px 0;
 }
 
 .machine,
-.paytable_tab,
-.shop_panel {
+.paytable_tab {
   border: 2px solid var(--border);
   border-radius: 8px;
   background: var(--panel);
@@ -102,19 +132,14 @@ button {
   grid-column: 1;
 }
 
-.shop_panel {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: stretch;
-  padding: 20px;
-  overflow: hidden;
-}
-
 .boost_indicator {
   position: absolute;
   top: 14px;
   right: 14px;
   z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   max-width: min(240px, calc(100% - 28px));
   padding: 8px 10px;
   border: 1px solid rgba(255, 209, 102, 0.78);
@@ -125,6 +150,17 @@ button {
   font-size: 0.78rem;
   text-transform: uppercase;
   animation: boost-pulse 1.2s ease-in-out infinite;
+}
+
+.boost_indicator_icon {
+  flex-shrink: 0;
+  line-height: 1;
+  color: var(--cyan);
+}
+
+.boost_indicator_text {
+  min-width: 0;
+  line-height: 1.25;
 }
 
 .boost_indicator[hidden] {
@@ -312,7 +348,16 @@ h2 {
 .controls {
   margin-top: 22px;
   display: grid;
-  grid-template-columns: auto minmax(160px, 230px) minmax(130px, 1fr) minmax(130px, 1fr);
+
+  grid-template-columns:
+    auto
+    minmax(160px, 230px)
+    minmax(110px, 1fr)
+    minmax(110px, 1fr)
+    minmax(100px, 1fr)
+    minmax(100px, 1fr)
+    minmax(120px, 1fr);
+
   gap: 12px;
   align-items: center;
 }
@@ -330,7 +375,12 @@ h2 {
 
 .icon_button,
 .spin_button,
-.auto_spin_button {
+.auto_spin_button,
+
+.stop_button,
+
+.shop_open_button,
+.music_toggle_button {
   min-height: 44px;
   border: 1px solid rgba(47, 248, 255, 0.72);
   border-radius: 6px;
@@ -341,7 +391,12 @@ h2 {
 
 .icon_button:hover,
 .spin_button:hover,
-.auto_spin_button:hover {
+.auto_spin_button:hover,
+
+.stop_button:hover,
+
+.shop_open_button:hover,
+.music_toggle_button:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 18px rgba(47, 248, 255, 0.42);
 }
@@ -349,6 +404,11 @@ h2 {
 .icon_button:disabled,
 .spin_button:disabled,
 .auto_spin_button:disabled,
+
+.stop_button:disabled,
+
+.shop_open_button:disabled,
+.music_toggle_button:disabled,
 input:disabled {
   cursor: not-allowed;
   opacity: 0.55;
@@ -364,8 +424,24 @@ input {
   text-align: center;
 }
 
+/* Hide native number spinners (Chrome, Safari, Edge); keep +/- buttons in UI */
+input[type="number"],
+#bet {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button,
+#bet::-webkit-outer-spin-button,
+#bet::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .spin_button,
-.auto_spin_button {
+.auto_spin_button,
+.stop_button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -378,6 +454,31 @@ input {
 .auto_spin_button {
   border-color: rgba(255, 209, 102, 0.72);
   background: linear-gradient(135deg, rgba(255, 209, 102, 0.28), rgba(47, 248, 255, 0.18));
+}
+
+
+.stop_button {
+  border-color: rgba(255, 94, 122, 0.78);
+  background: linear-gradient(135deg, rgba(255, 94, 122, 0.32), rgba(255, 61, 242, 0.16));
+}
+
+
+.shop_open_button {
+  text-transform: uppercase;
+  border-color: rgba(155, 92, 255, 0.72);
+  background: linear-gradient(135deg, rgba(155, 92, 255, 0.35), rgba(47, 248, 255, 0.12));
+}
+
+.music_toggle_button {
+  text-transform: uppercase;
+  border-color: rgba(84, 255, 173, 0.7);
+  background: linear-gradient(135deg, rgba(84, 255, 173, 0.2), rgba(47, 248, 255, 0.12));
+}
+
+.music_toggle_button[aria-pressed="false"] {
+  border-color: rgba(170, 183, 214, 0.5);
+  color: var(--muted);
+  background: rgba(8, 12, 34, 0.78);
 }
 
 .paytable_tab {
@@ -404,6 +505,25 @@ input {
   box-shadow: inset 0 0 18px rgba(47, 248, 255, 0.24);
 }
 
+.paytable_tab:has(#paytable_panel:not([hidden])) .paytable_tab_button {
+  color: var(--ink);
+  background: linear-gradient(
+    120deg,
+    rgba(47, 248, 255, 0.22) 0%,
+    rgba(255, 61, 242, 0.18) 45%,
+    rgba(155, 92, 255, 0.2) 100%
+  );
+  box-shadow:
+    inset 0 0 20px rgba(47, 248, 255, 0.2),
+    0 0 20px rgba(255, 61, 242, 0.15);
+}
+
+.paytable_tab:has(#paytable_panel:not([hidden])) .paytable_tab_icon {
+  border-color: rgba(255, 209, 102, 0.75);
+  color: var(--amber);
+  box-shadow: 0 0 12px rgba(255, 209, 102, 0.35);
+}
+
 .paytable_tab_button span:first-child {
   font-size: 1.1rem;
   font-weight: 700;
@@ -421,8 +541,17 @@ input {
 }
 
 .paytable_tab_panel {
-  padding: 18px;
-  border-top: 1px solid rgba(116, 232, 255, 0.24);
+  padding: 20px 20px 22px;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  background:
+    linear-gradient(165deg, rgba(47, 248, 255, 0.1) 0%, transparent 42%),
+    linear-gradient(335deg, rgba(255, 61, 242, 0.08) 0%, transparent 38%),
+    linear-gradient(180deg, rgba(5, 8, 22, 0.95), rgba(12, 8, 28, 0.92));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 209, 102, 0.22),
+    inset 0 0 40px rgba(47, 248, 255, 0.06),
+    0 12px 28px rgba(0, 0, 0, 0.35);
 }
 
 .paytable_tab_panel[hidden] {
@@ -432,8 +561,8 @@ input {
 .paytable_rules,
 .shop_rules {
   display: grid;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 10px;
+  margin-bottom: 18px;
   color: var(--muted);
 }
 
@@ -442,15 +571,33 @@ input {
   margin: 0;
 }
 
-.paytable_tab h2,
-.shop_panel h2 {
-  margin-top: 18px;
-  font-size: 1rem;
-  color: var(--ink);
+.paytable_rules p {
+  padding: 10px 12px 10px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(47, 248, 255, 0.28);
+  border-left: 4px solid var(--cyan);
+  background: rgba(8, 12, 34, 0.72);
+  box-shadow: 0 0 14px rgba(47, 248, 255, 0.08);
 }
 
-.shop_panel h2 {
-  margin-top: 0;
+.paytable_rules p:nth-child(2) {
+  border-left-color: var(--magenta);
+  border-color: rgba(255, 61, 242, 0.28);
+  box-shadow: 0 0 14px rgba(255, 61, 242, 0.08);
+}
+
+.paytable_tab h2 {
+  margin-top: 6px;
+  margin-bottom: 4px;
+  padding: 8px 12px;
+  font-size: 1rem;
+  color: var(--ink);
+  text-align: center;
+  letter-spacing: 0.06em;
+  border-radius: 6px;
+  background: linear-gradient(90deg, rgba(155, 92, 255, 0.35), rgba(47, 248, 255, 0.22), rgba(255, 61, 242, 0.28));
+  border: 1px solid rgba(255, 209, 102, 0.35);
+  box-shadow: 0 0 18px rgba(255, 209, 102, 0.12);
 }
 
 .paytable_list,
@@ -480,6 +627,14 @@ input {
   background: rgba(8, 12, 34, 0.86);
 }
 
+.paytable_row:nth-child(odd) {
+  border-color: rgba(47, 248, 255, 0.2);
+}
+
+.paytable_row:nth-child(even) {
+  border-color: rgba(255, 61, 242, 0.18);
+}
+
 .paytable_row span,
 .shop_item span {
   min-width: 0;
@@ -489,7 +644,6 @@ input {
   color: var(--amber);
 }
 
-.shop_buy_button,
 .chest_button,
 .reward_continue_button {
   min-height: 40px;
@@ -500,16 +654,50 @@ input {
   cursor: pointer;
 }
 
-.shop_buy_button:hover,
 .chest_button:hover,
 .reward_continue_button:hover {
   transform: translateY(-2px);
   box-shadow: 0 0 18px rgba(255, 209, 102, 0.34);
 }
 
+.shop_buy_button {
+  min-height: 40px;
+  min-width: 5.5rem;
+  padding: 0 14px;
+  border: 1px solid rgba(47, 248, 255, 0.65);
+  border-radius: 6px;
+  color: var(--ink);
+  cursor: pointer;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  background: linear-gradient(145deg, rgba(155, 92, 255, 0.42), rgba(47, 248, 255, 0.2), rgba(255, 61, 242, 0.22));
+  box-shadow:
+    0 0 14px rgba(47, 248, 255, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, filter 0.16s ease;
+}
+
+.shop_buy_button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: rgba(255, 209, 102, 0.85);
+  box-shadow:
+    0 0 22px rgba(47, 248, 255, 0.45),
+    0 0 28px rgba(255, 61, 242, 0.28),
+    inset 0 0 16px rgba(255, 209, 102, 0.12);
+  filter: brightness(1.06);
+}
+
+.shop_buy_button:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
 .shop_buy_button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+  filter: none;
+  box-shadow: none;
 }
 
 .modal_overlay {
@@ -520,6 +708,16 @@ input {
   place-items: center;
   padding: 20px;
   background: rgba(2, 3, 13, 0.78);
+  pointer-events: auto;
+}
+
+.modal_overlay_shop {
+  z-index: 25;
+}
+
+#chest_modal,
+#reward_modal {
+  z-index: 35;
 }
 
 .modal_overlay[hidden] {
@@ -527,14 +725,49 @@ input {
 }
 
 .modal_panel {
+  position: relative;
   width: min(520px, 100%);
   padding: 24px;
   border: 2px solid var(--border);
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--panel-strong);
-  box-shadow: 0 0 34px rgba(47, 248, 255, 0.24);
+  box-shadow:
+    0 18px 48px rgba(0, 0, 0, 0.55),
+    0 0 34px rgba(47, 248, 255, 0.24);
   text-align: center;
   animation: modal-pop 0.42s cubic-bezier(0.2, 1.4, 0.34, 1);
+}
+
+.shop_modal_panel {
+  width: min(440px, 100%);
+  text-align: left;
+}
+
+.shop_modal_panel h2 {
+  margin-top: 0;
+  padding-right: 36px;
+  text-align: center;
+}
+
+.modal_close_button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 209, 102, 0.55);
+  border-radius: 8px;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--ink);
+  background: rgba(8, 12, 34, 0.96);
+  cursor: pointer;
+}
+
+.modal_close_button:hover {
+  box-shadow: 0 0 14px rgba(255, 209, 102, 0.35);
 }
 
 .modal_panel p {
@@ -761,11 +994,6 @@ input {
     padding-top: 18px;
   }
 
-  .machine_header,
-  .controls {
-    grid-template-columns: 1fr;
-  }
-
   .machine_header {
     flex-direction: column;
   }
@@ -775,11 +1003,51 @@ input {
     text-align: left;
   }
 
-  .shop_panel,
   .paytable_tab,
   .machine {
     grid-column: 1;
     grid-row: auto;
+  }
+
+  .controls {
+
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-areas:
+      "label label label"
+      "bet bet bet"
+      "spin auto stop"
+      "shop music music";
+
+  }
+
+  .controls label {
+    grid-area: label;
+  }
+
+  .controls .bet_control {
+    grid-area: bet;
+  }
+
+  .controls .spin_button {
+    grid-area: spin;
+  }
+
+  .controls .auto_spin_button {
+    grid-area: auto;
+  }
+
+  .controls .shop_open_button {
+    grid-area: shop;
+  }
+
+
+  .controls .stop_button {
+    grid-area: stop;
+  }
+
+
+  .controls .music_toggle_button {
+    grid-area: music;
   }
 }
 
