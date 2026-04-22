@@ -54,6 +54,37 @@ button {
   z-index: -2;
 }
 
+.game_ui {
+  position: relative;
+  cursor: url("assets/cursor-reticle.svg") 12 12, crosshair;
+}
+
+.game_ui .modal_overlay,
+.game_ui .machine,
+.game_ui .paytable_tab,
+.game_ui .reels,
+.game_ui .symbol {
+  cursor: inherit;
+}
+
+.game_ui button:not(:disabled),
+.game_ui .paytable_tab_button,
+.game_ui .modal_close_button,
+.game_ui label[for="bet"] {
+  cursor: url("assets/cursor-pointer.svg") 4 4, pointer;
+}
+
+.game_ui input[type="number"],
+.game_ui input[type="text"],
+.game_ui textarea {
+  cursor: text;
+}
+
+.game_ui button:disabled,
+.game_ui .shop_buy_button:disabled {
+  cursor: not-allowed;
+}
+
 .crt_overlay {
   z-index: -1;
   pointer-events: none;
@@ -106,6 +137,9 @@ button {
   top: 14px;
   right: 14px;
   z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   max-width: min(240px, calc(100% - 28px));
   padding: 8px 10px;
   border: 1px solid rgba(255, 209, 102, 0.78);
@@ -116,6 +150,17 @@ button {
   font-size: 0.78rem;
   text-transform: uppercase;
   animation: boost-pulse 1.2s ease-in-out infinite;
+}
+
+.boost_indicator_icon {
+  flex-shrink: 0;
+  line-height: 1;
+  color: var(--cyan);
+}
+
+.boost_indicator_text {
+  min-width: 0;
+  line-height: 1.25;
 }
 
 .boost_indicator[hidden] {

@@ -43,6 +43,7 @@ const elements = {
   balance: document.querySelector("#balance"),
   bet: document.querySelector("#bet"),
   boostIndicator: document.querySelector("#boost_indicator"),
+  boostIndicatorText: document.querySelector("#boost_indicator_text"),
   chestGrid: document.querySelector("#chest_grid"),
   chestModal: document.querySelector("#chest_modal"),
   controls: document.querySelector("#controls"),
@@ -129,17 +130,20 @@ async function handleAutoSpin() {
   }
 
   const autoSpinBet = getSanitizedBet();
+  const sessionStartBalance = state.balance;
+  let completedSpins = 0;
+
   state.autoSpinning = true;
   setControlsEnabled(false);
+  setStatus("Auto spin…", "ready");
 
   try {
-    let completedSpins = 0;
     while (completedSpins < AUTO_SPIN_COUNT && state.balance >= autoSpinBet) {
       if (state.chestOpen) {
         break;
       }
 
-      const outcome = await runSpin({ bet: autoSpinBet, restoreControls: false });
+      const outcome = await runSpin({ bet: autoSpinBet, restoreControls: false, announceResult: false });
 
       if (!outcome) {
         break;
@@ -160,7 +164,37 @@ async function handleAutoSpin() {
     state.spinning = false;
     updateBetBounds();
     setControlsEnabled(state.balance >= MIN_BET && !state.chestOpen);
+
+    const net = state.balance - sessionStartBalance;
+    const spinWord = completedSpins === 1 ? "spin" : "spins";
+
+    if (state.chestOpen && state.balance < MIN_BET) {
+      setStatus(
+        `Auto session — ${completedSpins} ${spinWord}, ${formatNetTokens(net)}. Pick a chest to continue.`,
+        net > 0 ? "win" : net < 0 ? "loss" : "ready"
+      );
+    } else if (completedSpins > 0) {
+      setStatus(`Auto session — ${completedSpins} ${spinWord}, ${formatNetTokens(net)}.`, net > 0 ? "win" : net < 0 ? "loss" : "ready");
+    } else if (!state.chestOpen) {
+      setStatus("Auto spin did not run — need enough tokens for your current bet.", "ready");
+    }
   }
+}
+
+/**
+ * @param {number} delta End balance minus start balance for a session.
+ * @returns {string}
+ */
+function formatNetTokens(delta) {
+  if (delta > 0) {
+    return `up ${delta} tokens`;
+  }
+
+  if (delta < 0) {
+    return `down ${-delta} tokens`;
+  }
+
+  return "no net change";
 }
 
 /**
@@ -210,10 +244,10 @@ function closeShopModal() {
 /**
  * Runs one spin while keeping spin() as the permanent balance authority.
  *
- * @param {{ bet?: number, restoreControls?: boolean }} [options] Cleanup behavior.
+ * @param {{ bet?: number, restoreControls?: boolean, announceResult?: boolean }} [options] Cleanup behavior.
  * @returns {Promise<ReturnType<typeof spin> | undefined>}
  */
-async function runSpin({ bet = getSanitizedBet(), restoreControls = true } = {}) {
+async function runSpin({ bet = getSanitizedBet(), restoreControls = true, announceResult = true } = {}) {
   if (state.spinning) {
     return undefined;
   }
@@ -240,13 +274,17 @@ async function runSpin({ bet = getSanitizedBet(), restoreControls = true } = {})
     await animateReels(outcome.reels);
 
     state.balance = outcome.balance;
-    announceOutcome(outcome);
+    if (announceResult) {
+      announceOutcome(outcome);
+    }
     highlightWinningCells(outcome.wins);
     consumeBoostSpin();
     return outcome;
   } catch (error) {
     state.balance = ledgerOutcome !== null ? ledgerOutcome.balance : startingBalance;
-    setStatus(error.message, "loss");
+    if (announceResult && !state.autoSpinning) {
+      setStatus(error.message, "loss");
+    }
     return outcome;
   } finally {
     state.spinning = false;
@@ -516,12 +554,12 @@ function buyBoost(item) {
 function renderBoostIndicator() {
   if (!state.boost) {
     elements.boostIndicator.hidden = true;
-    elements.boostIndicator.textContent = "";
+    elements.boostIndicatorText.textContent = "";
     return;
   }
 
   elements.boostIndicator.hidden = false;
-  elements.boostIndicator.textContent = `◆ Payout boost active · ${state.boost.spinsRemaining}`;
+  elements.boostIndicatorText.textContent = `Payout boost active · ${state.boost.spinsRemaining} spins left`;
 }
 
 /**
