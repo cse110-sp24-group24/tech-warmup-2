@@ -614,6 +614,20 @@ body.theme-light .paytable_tab_panel {
     linear-gradient(180deg, rgba(255, 240, 201, 0.95), rgba(255, 218, 168, 0.92));
 }
 
+body.theme-light .paytable_tab h2,
+body.theme-light .paytable_rules p,
+body.theme-light .paytable_row span,
+body.theme-light .paytable_row strong {
+  color: #e86a17;
+}
+
+body.theme-light .paytable_rules p {
+  border-color: rgba(232, 106, 23, 0.36);
+  border-left-color: #e86a17;
+  background: rgba(255, 248, 227, 0.88);
+  box-shadow: 0 0 10px rgba(232, 106, 23, 0.08);
+}
+
 body.theme-light .bonus_open_button {
   color: #fff8ef;
   box-shadow: 0 0 20px rgba(214, 60, 52, 0.4);

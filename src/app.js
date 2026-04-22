@@ -66,6 +66,7 @@ const elements = {
   flappyModalClose: document.querySelector("#flappy_modal_close"),
   flappyOpenButton: document.querySelector("#flappy_open_button"),
   flappyPrompt: document.querySelector("#flappy_prompt"),
+  gameTitle: document.querySelector("#game_title"),
   increaseBet: document.querySelector("#increase_bet"),
   paytableList: document.querySelector("#paytable_list"),
   paytablePanel: document.querySelector("#paytable_panel"),
@@ -628,6 +629,7 @@ function renderThemeToggle() {
 function applyTheme(darkMode) {
   state.darkMode = darkMode;
   document.body.classList.toggle("theme-light", !darkMode);
+  elements.gameTitle.textContent = darkMode ? "Space and Beyond" : "Miami Vice";
   background.setTheme(darkMode ? "dark" : "light");
 }
 
