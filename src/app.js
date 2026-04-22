@@ -60,6 +60,7 @@ const elements = {
   flappyBonusTokens: document.querySelector("#flappy_bonus_tokens"),
   flappyCanvas: document.querySelector("#flappy_canvas"),
   flappyModal: document.querySelector("#flappy_modal"),
+  flappyPrompt: document.querySelector("#flappy_prompt"),
   increaseBet: document.querySelector("#increase_bet"),
   paytableList: document.querySelector("#paytable_list"),
   paytablePanel: document.querySelector("#paytable_panel"),
@@ -821,7 +822,7 @@ async function maybeRunFlappyBonus() {
   if (state.chestOpen || state.balance < MIN_BET || state.bonusGameActive || !shouldTriggerFlappyBonus()) {
     return;
   }
-  if (!elements.flappyModal || !elements.flappyCanvas || !elements.flappyBonusTokens) {
+  if (!elements.flappyModal || !elements.flappyCanvas || !elements.flappyBonusTokens || !elements.flappyPrompt) {
     return;
   }
 
@@ -829,6 +830,7 @@ async function maybeRunFlappyBonus() {
   state.bonusGameActive = true;
   setControlsEnabled(false);
   elements.flappyBonusTokens.textContent = "0";
+  elements.flappyPrompt.textContent = "Press Space to Start";
   elements.flappyModal.hidden = false;
   setStatus("Bonus round: Orbit Run active.", "ready");
 
@@ -860,6 +862,7 @@ function runFlappyBonusRound() {
   if (!context) {
     return Promise.resolve(0);
   }
+
   const width = canvas.width;
   const height = canvas.height;
   const birdX = width * FLAPPY_BIRD_X_RATIO;
@@ -873,8 +876,11 @@ function runFlappyBonusRound() {
   let birdVelocity = 0;
   let score = 0;
   let frameHandle = 0;
+  let watcherHandle = 0;
   let ended = false;
+  let gameStarted = false;
   let spawnAccumulator = 0;
+  let finalizeRound = () => {};
   /** @type {Array<{ x: number, gapTop: number, scored: boolean }>} */
   let pipes = [];
 
@@ -884,6 +890,9 @@ function runFlappyBonusRound() {
 
   const onCanvasPointerDown = (event) => {
     event.preventDefault();
+    if (!gameStarted) {
+      return;
+    }
     flap();
   };
 
@@ -892,8 +901,23 @@ function runFlappyBonusRound() {
       return;
     }
     event.preventDefault();
+
+    if (!gameStarted) {
+      startGame();
+      flap();
+      return;
+    }
+
     flap();
   };
+
+  /**
+   * @returns {void}
+   */
+  function cleanupListeners() {
+    canvas.removeEventListener("pointerdown", onCanvasPointerDown);
+    window.removeEventListener("keydown", onWindowKeyDown);
+  }
 
   /**
    * @returns {void}
@@ -944,6 +968,14 @@ function runFlappyBonusRound() {
     context.fillStyle = "rgba(248, 251, 255, 0.92)";
     context.font = "bold 20px 'Courier New', monospace";
     context.fillText(`Bonus: ${score}`, 14, 28);
+
+    if (!gameStarted) {
+      context.fillStyle = "rgba(248, 251, 255, 0.96)";
+      context.font = "bold 30px 'Courier New', monospace";
+      context.textAlign = "center";
+      context.fillText("PRESS SPACE TO START", width / 2, height * 0.52);
+      context.textAlign = "start";
+    }
   }
 
   /**
@@ -967,7 +999,7 @@ function runFlappyBonusRound() {
   }
 
   /**
-   * @returns {number}
+   * @returns {void}
    */
   function step() {
     birdVelocity += FLAPPY_GRAVITY;
@@ -992,7 +1024,6 @@ function runFlappyBonusRound() {
     });
 
     drawFrame();
-    return score;
   }
 
   /**
@@ -1005,34 +1036,57 @@ function runFlappyBonusRound() {
     }
 
     ended = true;
+    if (watcherHandle) {
+      window.clearInterval(watcherHandle);
+    }
     window.cancelAnimationFrame(frameHandle);
-    canvas.removeEventListener("pointerdown", onCanvasPointerDown);
-    window.removeEventListener("keydown", onWindowKeyDown);
+    cleanupListeners();
     resolve(score);
   }
 
-  spawnPipe();
+  /**
+   * @returns {void}
+   */
+  function gameLoop() {
+    if (ended || !state.bonusGameActive) {
+      finalizeRound();
+      return;
+    }
+
+    step();
+    if (collides()) {
+      finalizeRound();
+      return;
+    }
+
+    frameHandle = window.requestAnimationFrame(gameLoop);
+  }
+
+  /**
+   * @returns {void}
+   */
+  function startGame() {
+    if (gameStarted || ended || !state.bonusGameActive) {
+      return;
+    }
+
+    gameStarted = true;
+    elements.flappyPrompt.textContent = "Space or click to flap";
+    spawnPipe();
+    frameHandle = window.requestAnimationFrame(gameLoop);
+  }
+
   drawFrame();
   canvas.addEventListener("pointerdown", onCanvasPointerDown);
   window.addEventListener("keydown", onWindowKeyDown);
 
   return new Promise((resolve) => {
-    const loop = () => {
-      if (ended || !state.bonusGameActive) {
-        finish(resolve);
-        return;
+    finalizeRound = () => finish(resolve);
+    watcherHandle = window.setInterval(() => {
+      if (!state.bonusGameActive && !ended) {
+        finalizeRound();
       }
-
-      step();
-      if (collides()) {
-        finish(resolve);
-        return;
-      }
-
-      frameHandle = window.requestAnimationFrame(loop);
-    };
-
-    frameHandle = window.requestAnimationFrame(loop);
+    }, 80);
   });
 }
 
