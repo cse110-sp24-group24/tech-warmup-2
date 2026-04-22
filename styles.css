@@ -968,6 +968,10 @@ body.theme-light .bonus_open_button {
     bonus-rumble 0.34s ease-in-out 0.46s 2;
 }
 
+.bonus_result_panel .reward_continue_button {
+  color: #e86a17;
+}
+
 .reward_amount {
   margin: 18px 0;
   color: var(--amber);
