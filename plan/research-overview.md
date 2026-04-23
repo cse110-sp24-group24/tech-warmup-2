@@ -11,29 +11,35 @@
 | **Nishant** | Focused on moment-to-moment player experience (staggered stops, near-misses), advocated for a 3-reel setup, and established AI prompting guardrails. |
 | **Simar** | Expanded on the "AI Dystopia" theme with "hallucination" mechanics, defined statistical terms (RTP, Volatility), and emphasized varied UX feedback loops. |
 | **Ryan** | Examined statistical mechanics (RNG, Losses Disguised as Wins), UI layout best practices, and advocated for compartmentalization and Test-Driven Development. |
-| **Soohwan** |Researched slot machine app features including common slot machine technology, common theme, and user types |
+| **Soohwan** | Researched slot machine app features including common slot machine technology, common theme, and user types. |
+| **Henry** | Investigated industry UI standards, game types (gambling vs. fun/hybrid), player experience pacing (suspense, near-misses), and core technical constraints. |
+| **Shubhi** | Focused on technical file architecture (`gameLogic.js` vs `app.js`), UI/UX clarity, state management (avoiding double deductions), and proposed engagement features like shops, auto-spin, and zero-balance recovery. |
+
 ---
 
 ## Domain Research: The Problem Space
 
 Our domain research focused on understanding the underlying mechanics, psychology, and mathematical terminology of slot machines to ensure we prompt our AI models accurately.
 
-* **Core Game Logic:** The foundation of the machine relies on a strict Random Number Generator (RNG), independent of previous spins. 
+* **Core Game Logic:** The foundation of the machine relies on a strict Random Number Generator (RNG), making every spin fully independent of previous ones. The core loop is always: spinning reels + random outcomes.
+* **Game Types & Industry Standards:** The industry generally splits games into *Gambling-focused* (fewer features, designed to make money) and *Casual/Fun* (frequent wins, power-ups). We are aiming for a **Hybrid** approach that mixes fast RNG gameplay with engaging bonus features. 
 * **Statistical Controls:** The game's feel is dictated by Return to Player (RTP) and Volatility. Low volatility yields frequent small wins, while high volatility results in rare but massive payouts.
-* **Psychological Hooks:** Player engagement is heavily driven by pacing and perception. Techniques include staggered reel stops (Reel 1, then 2, then 3), near-misses, and Losses Disguised as Wins (LDWs) to maintain momentum even on a net-negative spin.
+* **Psychological Hooks:** Player engagement is heavily driven by pacing, timing, and sound. Techniques include staggered reel stops (stopping one at a time to build suspense), near-misses, and Losses Disguised as Wins (LDWs).
 * **The Paytable:** This is the ultimate source of truth for the game. It defines symbol weights and payout multipliers and must be explicitly established before any visual code is generated.
 
 ---
 
 ## User Research: Theme and Experience
 
-Based on our exploration of user needs and modern design paradigms, the team has gravitated toward a meta "AI/Cyberpunk" theme that gamifies our own engineering process.
+Based on our exploration of user needs and modern design paradigms, the team has gravitated toward a meta "AI/Cyberpunk" theme that gamifies our own engineering process, combined with a highly responsive, feature-rich hybrid experience.
 
 * **Theme & Narrative:** The machine represents an AI model's "thought process." The currency is "Compute Tokens," and getting a "Rate Limit" serves as the loss state.
-* **Symbols:** Instead of traditional cherries and 7s, the reels will feature GPUs (Jackpot/High Value), Context Windows (Mid Value), and Syntax Errors/Rate Limits (Low Value/Loss).
-* **Audio-Visual Feedback:** Users require distinct feedback for different outcomes. We will implement differentiated sound effects for generic wins vs. jackpots, and utilize CSS animations (like `transform: translateY()`) for smooth spinning.
-* **UI Clarity:** The player's balance must be central. Features like a temporary delta display on the balance (e.g., `+40`) and a visual spin history strip (colored dots for past outcomes) will reduce cognitive load.
-* **User Personas Considered:** We are balancing the needs of "Entertainment" players (who favor flashy UI, power-ups, and interactive levers) and "Gambling" players (who care about fast response times, clear paytables, and un-gimmicked RNG). 
+* **Visual Focus & Clarity:** While real machines use flashing visuals, too much clutter makes the UI confusing. The reels themselves must remain the absolute visual focus of the screen, with balance, bet, and spin results constantly and clearly visible.
+* **Audio-Visual Feedback:** Users require distinct feedback for different outcomes. We will implement differentiated sound effects for generic wins vs. big wins, and utilize CSS animations for smooth spinning. Stronger visual feedback (like confetti) will be reserved for major payouts.
+* **Engagement & Bonus Systems:** To make the game more fun and prevent it from feeling like a dead end, we will introduce:
+  * **Power-ups / Shop:** A system allowing users to spend tokens strategically on temporary boosts (e.g., 5x multipliers).
+  * **Recovery Systems:** A mystery chest or redemption feature that triggers when the user's balance reaches 0.
+  * **Auto-Spin:** For pacing and convenience, showing users their net gain/loss over a session rather than per-spin.
 
 ---
 
@@ -41,15 +47,18 @@ Based on our exploration of user needs and modern design paradigms, the team has
 
 To avoid the "slop" commonly generated by LLMs trying to build a full application at once, we have aligned on a strict, modular approach.
 
-* **Separation of Concerns:** We will prompt the AI to build the application in two distinct halves: a Math/State Module (handling RNG, paytable, and balance tracking) and a UI/Animation Module.
-* **Test-Driven Development (TDD):** We will require the AI to write unit tests for the core game logic and verify edge cases (e.g., zero balance, bets exceeding balance) before generating the front-end code.
+* **Strict Separation of Concerns:** We will prompt the AI to rigidly split logic from UI to make debugging and testing easier:
+  * `gameLogic.js`: Handles RNG, payouts, and rules.
+  * `app.js`: Handles DOM manipulation, UI, and interactions.
+* **State Management Consistency:** Outcomes must be calculated *before* animations begin. To avoid visual bugs, we must ensure the balance handles deductions and winnings exactly once per turn (avoiding duplicate UI updates).
+* **Test-Driven Development (TDD):** We will require the AI to write unit tests for the core game logic and verify edge cases before generating the front-end code.
+* **Edge Case Handling:** The codebase must explicitly prevent softlocks and errors. Key test areas include: preventing negative balances, ensuring bets cannot exceed balances, handling `0` reward options in chests, and managing interrupted animations.
 * **Agent Control:** We will utilize a `skills.md` file to feed the LLM strict instructions regarding our coding standards, preventing the model from hallucinating its own logic or straying from clean code principles.
-* **Architectural Milestones:** The paytable data object will be locked in as our very first technical step. Furthermore, we will prompt the AI to animate one reel perfectly before asking it to duplicate the logic for the others.
 
 ---
 
 ## Outstanding Team Decisions
 
 * **Reel Count:** Settle the debate between a 3-reel system (simpler payline logic, cleaner AI generation) and a 5-reel system (more complex, visually distinct).
-* **Feature Scope:** Decide whether to implement MVP stretch goals immediately (e.g., external MCP leaderboards, user login) or save them for the polish phase.
-* **Interaction Method:** Finalize whether the primary input will be a stylized manual lever, a standard button, or if auto-spin will be included in V1.
+* **Feature Rollout:** Determine if the proposed Hybrid features (Shop, Power-ups, Auto-spin, Chest Redemptions) should be included in the initial MVP prompt or added iteratively in later AI turns.
+* **Interaction Method:** Finalize whether the primary manual input will be a stylized lever or a standard button to complement the Auto-spin functionality.
